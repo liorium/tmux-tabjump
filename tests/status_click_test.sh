@@ -75,7 +75,7 @@ assert_not_contains "pane-menu show  /dev/pts/1" "menu should not open on mouse 
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/status-click.sh" menu up /dev/pts/1
-assert_contains "pane-menu show  /dev/pts/1" "menu should open on mouse up"
+assert_contains "pane-menu show  /dev/pts/1" "menu should open the display-menu flow on mouse up"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/status-click.sh" tab:3 down

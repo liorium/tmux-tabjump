@@ -8,8 +8,8 @@ source "$CURRENT_DIR/common.sh"
 range_value="${1:-}"
 event_phase="${2:-down}"
 client_target="${3:-}"
-pane_menu_script="${TABJUMP_PANE_MENU_SCRIPT:-$CURRENT_DIR/pane-menu.sh}"
 jump_visible_pane_script="${TABJUMP_JUMP_SCRIPT:-$CURRENT_DIR/jump-visible-pane.sh}"
+pane_menu_script="${TABJUMP_PANE_MENU_SCRIPT:-$CURRENT_DIR/pane-menu.sh}"
 
 case "$range_value" in
 menu)

@@ -143,4 +143,20 @@ expected_names=("alpha" "beta tab")
 expected_panes=("%1" "")
 assert_tab_array expected_names expected_panes loaded_names loaded_panes "load_tabs should decode saved tab state"
 
+set_plugin_opt "tabs" ""
+set_plugin_opt "tabs-file" "$TMP_DIR/tabs.tsv"
+cat >"$TMP_DIR/tabs.tsv" <<'EOF'
+cmVzdG9yZWQ=	dev	1	ZWRpdG9y	0
+EOF
+
+restore_tabs_from_file_if_needed
+
+restored_names=()
+restored_panes=()
+load_tabs restored_names restored_panes
+
+expected_restored_names=("restored")
+expected_restored_panes=("")
+assert_tab_array expected_restored_names expected_restored_panes restored_names restored_panes "restore_tabs_from_file_if_needed should preserve saved tabs and normalize missing panes to empty"
+
 printf 'PASS: tests/common_test.sh\n'
