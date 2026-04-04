@@ -13,9 +13,20 @@ render_badge() {
   local label="$2"
   local fg="$3"
   local bg="$4"
+  local right_edge="${5:-round}"
+
+  if [ "$right_edge" = "square" ]; then
+    printf '#[range=user|%s]#[fg=%s,bg=#1e1e2e]#[bold,fg=%s,bg=%s] %s #[default]#[norange]' \
+      "$range" "$bg" "$fg" "$bg" "$label"
+    return
+  fi
 
   printf '#[range=user|%s]#[fg=%s,bg=#1e1e2e]#[bold,fg=%s,bg=%s] %s #[fg=%s,bg=#1e1e2e]#[default]#[norange]' \
     "$range" "$bg" "$fg" "$bg" "$label" "$bg"
+}
+
+render_menu_badge() {
+  printf '#[range=user|menu]#[fg=#6c7086,bg=#1e1e2e]#[bold,fg=#11111b,bg=#6c7086]m #[fg=#cdd6f4,bg=#313244] menu #[default]#[norange]'
 }
 
 render_tab_badge() {
@@ -47,7 +58,7 @@ if ! [[ "$client_width" =~ ^[0-9]+$ ]]; then
   client_width=120
 fi
 
-append_segment badges_output "$(render_badge "menu" "menu" "#11111b" "#f9e2af")"
+append_segment badges_output "$(render_menu_badge)"
 
 tab_names=()
 tab_panes=()

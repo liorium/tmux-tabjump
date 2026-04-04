@@ -21,7 +21,7 @@ elif [ "$current_status_lines" -ge 2 ] 2>/dev/null && [ "$status_line" -ge "$cur
   tmux set -g status "$target_lines"
 fi
 
-statusline_cmd="#[bg=#1e1e2e]#[fg=#cdd6f4]#($CURRENT_DIR/scripts/statusline.sh '#{pane_id}') "
+statusline_cmd="#[bg=#1e1e2e]#[fg=#cdd6f4]#($CURRENT_DIR/scripts/statusline.sh '#{pane_id}')"
 current_format="$(tmux show-option -gqv "status-format[${status_line}]" 2>/dev/null || true)"
 if [ "$current_format" != "$statusline_cmd" ]; then
   tmux set -g "status-format[${status_line}]" "$statusline_cmd"

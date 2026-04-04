@@ -105,12 +105,25 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local haystack="$1"
+  local needle="$2"
+  local message="$3"
+
+  if [[ "$haystack" == *"$needle"* ]]; then
+    printf 'FAIL: %s\nunexpected: %s\n' "$message" "$needle" >&2
+    exit 1
+  fi
+}
+
 tab_names=("active" "scratch")
 tab_panes=("%1" "")
 save_tabs tab_names tab_panes
 
 rendered="$(bash "$ROOT_DIR/scripts/statusline.sh" "%1")"
 
+assert_contains "$rendered" "#[range=user|menu]#[fg=#6c7086,bg=#1e1e2e]#[bold,fg=#11111b,bg=#6c7086]m #[fg=#cdd6f4,bg=#313244] menu #[default]#[norange]" "menu badge should use the same accent as inactive tab numbers"
+assert_not_contains "$rendered" "#[range=user|menu]#[fg=#f9e2af,bg=#1e1e2e]#[bold,fg=#11111b,bg=#f9e2af] menu #[default]#[norange]" "menu badge should no longer use the full filled menu block"
 assert_contains "$rendered" "#[bold,fg=#11111b,bg=#3B82F6]1 " "active tab number should restore the default text color on the active accent"
 assert_contains "$rendered" "#[bold,fg=#11111b,bg=#f9e2af]2 " "empty tab number should use the restored empty accent color"
 assert_contains "$rendered" "#[fg=#f9e2af,bg=#313244] scratch · empty " "empty tab label should use the restored empty label styling"
