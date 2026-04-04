@@ -28,7 +28,7 @@ if [ "$current_format" != "$statusline_cmd" ]; then
 fi
 
 tmux unbind-key -n MouseDown1Status 2>/dev/null || true
-tmux bind-key -n MouseDown1Status run-shell -b "$CURRENT_DIR/scripts/status-click.sh \"#{mouse_status_range}\""
+tmux bind-key -n MouseDown1Status if-shell -F "#{==:#{mouse_status_line},${status_line}}" "run-shell -b '$CURRENT_DIR/scripts/status-click.sh \"#{mouse_status_range}\"'" "select-window -t ="
 tmux unbind-key a 2>/dev/null || true
 tmux unbind-key j 2>/dev/null || true
 tmux unbind-key "$pane_menu_key" 2>/dev/null || true
