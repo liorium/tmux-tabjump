@@ -6,15 +6,23 @@ CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$CURRENT_DIR/common.sh"
 
 range_value="${1:-}"
+event_phase="${2:-down}"
+client_target="${3:-}"
+pane_menu_script="${TABJUMP_PANE_MENU_SCRIPT:-$CURRENT_DIR/pane-menu.sh}"
+jump_visible_pane_script="${TABJUMP_JUMP_SCRIPT:-$CURRENT_DIR/jump-visible-pane.sh}"
 
 case "$range_value" in
 menu)
-  exec "$CURRENT_DIR/pane-menu.sh" show
+  if [ "$event_phase" = "up" ]; then
+    exec "$pane_menu_script" show "" "$client_target"
+  fi
   ;;
 tab:*)
-  tab_number="${range_value#tab:}"
-  if "$CURRENT_DIR/jump-visible-pane.sh" "$tab_number"; then
-    tmux refresh-client -S >/dev/null 2>&1 || true
+  if [ "$event_phase" = "down" ]; then
+    tab_number="${range_value#tab:}"
+    if "$jump_visible_pane_script" "$tab_number"; then
+      tmux refresh-client -S >/dev/null 2>&1 || true
+    fi
   fi
   ;;
 esac
