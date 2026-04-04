@@ -6,6 +6,7 @@ CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$CURRENT_DIR/common.sh"
 
 ACTIVE_PANE_ID="${1:-}"
+ACTIVE_TAB_ACCENT="#3B82F6"
 
 render_badge() {
   local range="$1"
@@ -21,11 +22,12 @@ render_tab_badge() {
   local index="$1"
   local label="$2"
   local number_bg="$3"
-  local label_fg="$4"
-  local label_bg="${5:-#313244}"
+  local number_fg="${4:-#11111b}"
+  local label_fg="$5"
+  local label_bg="${6:-#313244}"
 
-  printf '#[range=user|tab:%s]#[fg=%s,bg=#1e1e2e]#[bold,fg=#11111b,bg=%s]%s #[fg=%s,bg=%s] %s #[fg=%s,bg=#1e1e2e]#[default]#[norange]' \
-    "$index" "$number_bg" "$number_bg" "$index" "$label_fg" "$label_bg" "$label" "$label_bg"
+  printf '#[range=user|tab:%s]#[fg=%s,bg=#1e1e2e]#[bold,fg=%s,bg=%s]%s #[fg=%s,bg=%s] %s #[fg=%s,bg=#1e1e2e]#[default]#[norange]' \
+    "$index" "$number_bg" "$number_fg" "$number_bg" "$index" "$label_fg" "$label_bg" "$label" "$label_bg"
 }
 
 append_segment() {
@@ -76,9 +78,11 @@ for idx in "${!tab_names[@]}"; do
   pane_id="${tab_panes[$idx]}"
   label_fg="#cdd6f4"
   number_bg="#6c7086"
+  number_fg="#11111b"
+  label_bg="#313244"
 
   if [ "$pane_id" = "$ACTIVE_PANE_ID" ] && [ -n "$pane_id" ]; then
-    number_bg="#f9e2af"
+    number_bg="$ACTIVE_TAB_ACCENT"
   elif [ -z "$pane_id" ]; then
     number_bg="#f9e2af"
     label_fg="#f9e2af"
@@ -90,7 +94,7 @@ for idx in "${!tab_names[@]}"; do
   fi
 
   tab_name="$(truncate_label "$tab_name" "$per_tab_budget")"
-  append_segment tabs_output "$(render_tab_badge "$tab_number" "$tab_name" "$number_bg" "$label_fg")"
+  append_segment tabs_output "$(render_tab_badge "$tab_number" "$tab_name" "$number_bg" "$number_fg" "$label_fg" "$label_bg")"
 done
 
 printf '#[align=left]%s#[align=right]%s' "$tabs_output" "$badges_output"
