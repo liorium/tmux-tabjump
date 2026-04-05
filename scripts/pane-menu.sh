@@ -175,10 +175,41 @@ show_main_menu() {
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
+  cmd+=(--)
 
   cmd+=(
     "현재 pane 작업" "p" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-actions \"$client_target\"'"
     "탭 관리" "t" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'"
+    "단축키 보기" "?" "run-shell '$CURRENT_DIR/pane-menu.sh show-shortcuts \"$client_target\"'"
+  )
+
+  "${cmd[@]}"
+}
+
+show_shortcuts_menu() {
+  local client_target
+  client_target="$(resolve_client_target "${1:-}" "${2:-}")"
+
+  local cmd=(
+    tmux
+    display-menu
+    -T "단축키"
+  )
+  add_menu_position cmd
+  if [ -n "$client_target" ]; then
+    cmd+=(-c "$client_target")
+  fi
+  cmd+=(--)
+
+  cmd+=(
+    "Option+1..9: 해당 탭으로 이동" "" ""
+    'Option+`: 이전 탭으로 이동' "" ""
+    "prefix + m: 탭 메뉴 열기" "" ""
+    "" "" ""
+    "메뉴 안 Enter: 선택한 탭으로 이동/실행" "" ""
+    "메뉴 안 b: 뒤로가기" "" ""
+    "" "" ""
+    "← 메인 메뉴" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
   )
 
   "${cmd[@]}"
@@ -203,6 +234,7 @@ show_pane_actions() {
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
+  cmd+=(--)
 
   cmd+=("$(current_pane_summary_label "$current_pane_id")" "" "")
 
@@ -235,6 +267,7 @@ show_manage_menu() {
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
+  cmd+=(--)
 
   cmd+=(
     "⇅ 순서 변경" "o" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker reorder \"\" \"$client_target\"'"
@@ -277,6 +310,7 @@ show_reorder_menu() {
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
+  cmd+=(--)
 
   cmd+=("$(tab_menu_label "$tab_number" "${tab_names[$tab_index]}" "${tab_panes[$tab_index]}" "$current_pane_id")" "" "")
 
@@ -332,6 +366,7 @@ show_tab_menu() {
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
+  cmd+=(--)
 
   cmd+=("$status_label" "" "")
 
@@ -386,6 +421,7 @@ show_pane_picker() {
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
+  cmd+=(--)
 
   if [ "${#pane_rows[@]}" -eq 0 ]; then
     cmd+=("(pane이 없습니다)" "" "")
@@ -442,6 +478,7 @@ show_tab_picker() {
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
+  cmd+=(--)
 
   if [ "${#tab_names[@]}" -eq 0 ]; then
     cmd+=("(탭이 없습니다)" "" "")
@@ -702,6 +739,9 @@ focus_tab() {
 case "$action" in
 show)
   show_main_menu "$arg1" "$arg2"
+  ;;
+show-shortcuts)
+  show_shortcuts_menu "$arg1" "$arg2"
   ;;
 show-pane-actions)
   show_pane_actions "$arg1" "$arg2"

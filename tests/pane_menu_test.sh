@@ -151,6 +151,14 @@ assert_contains "display-menu -T Tabjump -x C -y C" "main menu should open cente
 assert_contains "-c /dev/pts/1" "main menu should target the current client"
 assert_contains "현재 pane 작업" "main menu should split pane actions from tab management"
 assert_contains "탭 관리" "main menu should expose tab management as a separate branch"
+assert_contains "단축키 보기" "main menu should expose a shortcuts entry"
+
+: >"$LOG_FILE"
+bash "$ROOT_DIR/scripts/pane-menu.sh" show-shortcuts /dev/pts/1
+assert_contains "display-menu -T 단축키 -x C -y C" "shortcuts menu should use the centered anchor position"
+assert_contains "Option+1..9: 해당 탭으로 이동" "shortcuts menu should list the numeric tab jump binding"
+assert_contains 'Option+`: 이전 탭으로 이동' "shortcuts menu should list the previous-tab binding"
+assert_contains "← 메인 메뉴" "shortcuts menu should provide a way back to the main menu"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-pane-actions /dev/pts/1
