@@ -353,6 +353,32 @@ focus_pane_by_id() {
   tmux select-pane -t "$pane_id" >/dev/null 2>&1 || true
 }
 
+active_tab_number() {
+  local current_pane_id
+  current_pane_id="$(tmux display-message -p '#{pane_id}' 2>/dev/null || true)"
+  [ -n "$current_pane_id" ] || return 1
+
+  local tab_index
+  tab_index="$(tab_index_for_pane "$current_pane_id" 2>/dev/null)" || return 1
+  printf '%s\n' "$((tab_index + 1))"
+}
+
+sync_active_tab_history() {
+  local current_tab saved_current
+  current_tab="$(active_tab_number 2>/dev/null || true)"
+  [ -n "$current_tab" ] || return 0
+
+  saved_current="$(tmux show-option -gqv "@tabjump-current-tab" 2>/dev/null || true)"
+  if [ "$saved_current" = "$current_tab" ]; then
+    return 0
+  fi
+
+  if [ -n "$saved_current" ]; then
+    set_plugin_opt "last-tab" "$saved_current"
+  fi
+  set_plugin_opt "current-tab" "$current_tab"
+}
+
 truncate_label() {
   local text="$1"
   local max_len="$2"

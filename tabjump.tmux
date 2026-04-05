@@ -41,6 +41,8 @@ if [ "$direct_jump" = "on" ]; then
     tmux unbind-key -n "M-$i" 2>/dev/null || true
     tmux bind-key -n "M-$i" run-shell -b "$CURRENT_DIR/scripts/jump-visible-pane.sh $i"
   done
+  tmux unbind-key -n "M-\`" 2>/dev/null || true
+  tmux bind-key -n "M-\`" run-shell -b "$CURRENT_DIR/scripts/jump-last-tab.sh"
 fi
 
 tmux set-hook -g session-created "$refresh_hook_cmd"
@@ -62,4 +64,4 @@ tmux set-hook -g after-rename-window "$refresh_hook_cmd"
 tmux set-hook -g after-select-pane "$refresh_hook_cmd"
 tmux set-hook -g after-select-window "$refresh_hook_cmd"
 
-tmux refresh-client -S >/dev/null 2>&1 || true
+"$CURRENT_DIR/scripts/refresh-status.sh"
