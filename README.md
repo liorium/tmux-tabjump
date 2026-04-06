@@ -51,6 +51,7 @@ From the `prefix + m` menu:
   - Attach another pane to an existing tab
   - Create a new tab from another pane
   - Confirm before delete / dead-empty cleanup
+  - Show each pane's current tab assignment in the pane picker
 - Existing tab detail menu
   - Jump
   - Attach pane

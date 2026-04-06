@@ -51,6 +51,7 @@ tmux run-shell ~/.tmux/plugins/tmux-tabjump/tabjump.tmux
   - 다른 pane을 기존 탭에 붙이기
   - 다른 pane으로 새 탭 만들기
   - 삭제 / dead-empty 정리 전 확인 단계
+  - pane 선택 화면에서 현재 연결 탭 표시
 - 기존 탭 상세 메뉴
   - 이동
   - pane 붙이기

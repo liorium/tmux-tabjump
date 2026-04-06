@@ -93,11 +93,12 @@ list-panes)
   format="${*: -1}"
   case "$format" in
   '#{pane_id}')
-    printf '%%1\n%%2\n'
+    printf '%%1\n%%2\n%%3\n'
     ;;
   '#{session_name}	#{window_index}	#{window_name}	#{pane_index}	#{pane_id}	#{pane_current_path}')
     printf 'dev\t1\teditor\t0\t%%1\t/home/wl/work\n'
     printf 'dev\t2\tlogs\t0\t%%2\t/home/wl/logs\n'
+    printf 'dev\t3\tshell\t0\t%%3\t/home/wl/tmp\n'
     ;;
   *)
     echo "unsupported list-panes format: $format" >&2
@@ -202,8 +203,12 @@ assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh show-pane-picker atta
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-pane-picker create-selected "work-copy" /dev/pts/1
 assert_contains "display-menu -T 새 탭 'work-copy'에 붙일 pane 선택 -x C -y C" "create-selected pane picker should show a clearer target title"
+assert_contains "1 dev:editor.0 · ~/work · 탭 1 work" "pane picker should show the pane's current tab assignment"
+assert_contains "2 dev:logs.0 · ~/logs · 탭 3 current ← current" "pane picker should show the current pane assignment and marker together"
+assert_contains "3 dev:shell.0 · ~/tmp · 미지정" "pane picker should show unassigned panes explicitly"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %1 \"/dev/pts/1\"'" "create-selected should attach selected pane into the named new tab"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %2 \"/dev/pts/1\"'" "create-selected should offer all panes in picker"
+assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %3 \"/dev/pts/1\"'" "create-selected should offer unassigned panes too"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-reorder 2 /dev/pts/1
