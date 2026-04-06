@@ -383,6 +383,75 @@ truncate_label() {
   local text="$1"
   local max_len="$2"
 
+  if ! [[ "$max_len" =~ ^[0-9]+$ ]]; then
+    printf '%s\n' "$text"
+    return
+  fi
+
+  if [ "$max_len" -le 0 ]; then
+    printf '\n'
+    return
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$text" "$max_len" <<'PY'
+import ctypes
+import ctypes.util
+import locale
+import sys
+import unicodedata
+
+text = sys.argv[1]
+max_len = int(sys.argv[2])
+
+try:
+    locale.setlocale(locale.LC_CTYPE, "")
+except Exception:
+    pass
+
+lib_name = ctypes.util.find_library("c")
+libc = ctypes.CDLL(lib_name or None)
+wcswidth = libc.wcswidth
+wcswidth.argtypes = [ctypes.c_wchar_p, ctypes.c_size_t]
+wcswidth.restype = ctypes.c_int
+
+def cell_width(value: str) -> int:
+    width = wcswidth(value, len(value))
+    if width >= 0:
+        return width
+
+    total = 0
+    for ch in value:
+        if unicodedata.combining(ch) or unicodedata.category(ch) in {"Cf", "Mn", "Me"}:
+            continue
+        total += 2 if unicodedata.east_asian_width(ch) in {"W", "F"} else 1
+    return total
+
+if cell_width(text) <= max_len:
+    print(text)
+    raise SystemExit
+
+ellipsis = "…"
+ellipsis_width = cell_width(ellipsis)
+if max_len <= ellipsis_width:
+    print(ellipsis)
+    raise SystemExit
+
+budget = max_len - ellipsis_width
+parts = []
+used = 0
+for ch in text:
+    ch_width = cell_width(ch)
+    if used + ch_width > budget:
+        break
+    parts.append(ch)
+    used += ch_width
+
+print("".join(parts) + ellipsis)
+PY
+    return
+  fi
+
   if [ "${#text}" -le "$max_len" ]; then
     printf '%s\n' "$text"
     return

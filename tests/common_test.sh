@@ -159,4 +159,7 @@ expected_restored_names=("restored")
 expected_restored_panes=("")
 assert_tab_array expected_restored_names expected_restored_panes restored_names restored_panes "restore_tabs_from_file_if_needed should preserve saved tabs and normalize missing panes to empty"
 
+assert_eq "한글A" "$(truncate_label "한글A" 5)" "truncate_label should keep labels that exactly fit the display width"
+assert_eq "한…" "$(truncate_label "한글A" 4)" "truncate_label should use terminal display width for wide unicode labels"
+
 printf 'PASS: tests/common_test.sh\n'

@@ -53,6 +53,7 @@ From the `prefix + m` menu:
   - Confirm before delete / dead-empty cleanup
   - Show each pane's current tab assignment in the pane picker
   - Truncate long pane / tab labels in the picker to keep menus scannable
+  - Respect wide character widths (for example Korean) when truncating picker labels
 - Existing tab detail menu
   - Jump
   - Attach pane
