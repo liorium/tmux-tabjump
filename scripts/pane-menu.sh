@@ -122,6 +122,9 @@ tab_picker_title() {
   attach-current)
     printf '기존 탭에 붙이기\n'
     ;;
+  attach-existing-tab)
+    printf '붙일 탭 선택\n'
+    ;;
   reorder)
     printf '순서 바꿀 탭 선택\n'
     ;;
@@ -270,8 +273,8 @@ show_manage_menu() {
   cmd+=(--)
 
   cmd+=(
-    "⇄ 기존 탭에 기존 pane 붙이기" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker attach-existing-tab \"\" \"$client_target\"'"
-    "＋ 새 탭에 기존 pane 붙이기" "n" "command-prompt -p 'Tab name' \"run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker create-selected \\\"%%\\\" \\\"$client_target\\\"'\""
+    "⇄ 다른 pane을 기존 탭에 붙이기" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker attach-existing-tab \"\" \"$client_target\"'"
+    "＋ 다른 pane으로 새 탭 만들기" "n" "command-prompt -p 'Tab name' \"run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker create-selected \\\"%%\\\" \\\"$client_target\\\"'\""
     "⇅ 순서 변경" "o" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker reorder \"\" \"$client_target\"'"
     "✎ 이름 변경" "r" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker rename \"\" \"$client_target\"'"
     "✕ 삭제" "d" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker delete \"\" \"$client_target\"'"
@@ -409,9 +412,9 @@ show_pane_picker() {
 
   local title
   if [ "$mode" = "attach" ]; then
-    title="Tab ${target} ← pane 선택"
+    title="Tab ${target}에 붙일 pane 선택"
   else
-    title="새 탭 '${target}' → pane 선택"
+    title="새 탭 '${target}'에 붙일 pane 선택"
   fi
 
   local cmd=(

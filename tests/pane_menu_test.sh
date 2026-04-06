@@ -171,8 +171,8 @@ assert_contains "⊘ 현재 탭에서 해제" "pane actions should still allow d
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-manage-menu /dev/pts/1
 assert_contains "display-menu -T 탭 관리 -x C -y C" "tab management menu should use the centered anchor position"
-assert_contains "⇄ 기존 탭에 기존 pane 붙이기" "tab management should allow attaching an existing pane to an existing tab"
-assert_contains "＋ 새 탭에 기존 pane 붙이기" "tab management should allow creating a new tab from an existing pane"
+assert_contains "⇄ 다른 pane을 기존 탭에 붙이기" "tab management should allow attaching another pane to an existing tab"
+assert_contains "＋ 다른 pane으로 새 탭 만들기" "tab management should allow creating a new tab from another pane"
 assert_contains "⇅ 순서 변경" "tab management should prioritize reorder first"
 assert_contains "✎ 이름 변경" "tab management should prioritize rename second"
 assert_contains "✕ 삭제" "tab management should prioritize delete third"
@@ -192,13 +192,13 @@ assert_contains "display-menu -T 순서 바꿀 탭 선택 -x C -y C" "reorder fl
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-tab-picker attach-existing-tab "" /dev/pts/1
-assert_contains "display-menu -T 탭 선택 -x C -y C" "attach-existing-tab flow should use a generic tab picker"
+assert_contains "display-menu -T 붙일 탭 선택 -x C -y C" "attach-existing-tab flow should use a clearer tab picker title"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh show-pane-picker attach 1 \"/dev/pts/1\"'" "attach-existing-tab should route tab 1 to pane picker"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh show-pane-picker attach 2 \"/dev/pts/1\"'" "attach-existing-tab should route tab 2 to pane picker"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-pane-picker create-selected "work-copy" /dev/pts/1
-assert_contains "display-menu -T 새 탭 'work-copy' → pane 선택 -x C -y C" "create-selected pane picker should show target tab name in title"
+assert_contains "display-menu -T 새 탭 'work-copy'에 붙일 pane 선택 -x C -y C" "create-selected pane picker should show a clearer target title"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %1 \"/dev/pts/1\"'" "create-selected should attach selected pane into the named new tab"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %2 \"/dev/pts/1\"'" "create-selected should offer all panes in picker"
 

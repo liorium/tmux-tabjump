@@ -46,8 +46,8 @@ From the `prefix + m` menu:
   - Create from the current pane
   - Pick a pane first, then create
 - In the tab management menu
-  - Attach an existing pane to an existing tab
-  - Create a new tab from an existing pane
+  - Attach another pane to an existing tab
+  - Create a new tab from another pane
 - Existing tab detail menu
   - Jump
   - Attach pane

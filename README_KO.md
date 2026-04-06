@@ -46,8 +46,8 @@ tmux run-shell ~/.tmux/plugins/tmux-tabjump/tabjump.tmux
   - 현재 pane으로 바로 만들기
   - pane 선택 후 만들기
 - 탭 관리에서
-  - 기존 pane을 기존 탭에 붙이기
-  - 기존 pane을 새 탭에 붙이기
+  - 다른 pane을 기존 탭에 붙이기
+  - 다른 pane으로 새 탭 만들기
 - 기존 탭 상세 메뉴
   - 이동
   - pane 붙이기
