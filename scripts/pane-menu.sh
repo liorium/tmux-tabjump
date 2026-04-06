@@ -132,6 +132,20 @@ pane_assignment_label() {
   printf '미지정\n'
 }
 
+pane_picker_label() {
+  local index="$1"
+  local row="$2"
+  local pane_id="$3"
+  local current_marker="$4"
+  local -n picker_tab_names_ref="$5"
+  local -n picker_tab_panes_ref="$6"
+
+  local descriptor assignment
+  descriptor="$(truncate_label "$(pane_descriptor_from_row "$row")" 28)"
+  assignment="$(truncate_label "$(pane_assignment_label "$pane_id" picker_tab_names_ref picker_tab_panes_ref)" 18)"
+  printf '%s %s · %s%s\n' "$index" "$descriptor" "$assignment" "$current_marker"
+}
+
 tab_picker_title() {
   local mode="$1"
   case "$mode" in
@@ -549,7 +563,7 @@ show_pane_picker() {
   if [ "${#pane_rows[@]}" -eq 0 ]; then
     cmd+=("(pane이 없습니다)" "" "")
   else
-    local idx row pane_id key label current_marker assignment_label
+    local idx row pane_id key label current_marker
     for idx in "${!pane_rows[@]}"; do
       row="${pane_rows[$idx]}"
       IFS=$'\t' read -r _ _ _ _ pane_id _ <<<"$row"
@@ -563,8 +577,7 @@ show_pane_picker() {
         current_marker=" ← current"
       fi
 
-      assignment_label="$(pane_assignment_label "$pane_id" tab_names tab_panes)"
-      label="$((idx + 1)) $(pane_descriptor_from_row "$row") · ${assignment_label}${current_marker}"
+      label="$(pane_picker_label "$((idx + 1))" "$row" "$pane_id" "$current_marker" tab_names tab_panes)"
       if [ "$mode" = "attach" ]; then
         cmd+=("$label" "$key" "run-shell '$CURRENT_DIR/pane-menu.sh attach-pane $target $pane_id \"$client_target\"'")
       else

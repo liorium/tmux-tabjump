@@ -93,12 +93,13 @@ list-panes)
   format="${*: -1}"
   case "$format" in
   '#{pane_id}')
-    printf '%%1\n%%2\n%%3\n'
+    printf '%%1\n%%2\n%%3\n%%4\n'
     ;;
   '#{session_name}	#{window_index}	#{window_name}	#{pane_index}	#{pane_id}	#{pane_current_path}')
     printf 'dev\t1\teditor\t0\t%%1\t/home/wl/work\n'
     printf 'dev\t2\tlogs\t0\t%%2\t/home/wl/logs\n'
     printf 'dev\t3\tshell\t0\t%%3\t/home/wl/tmp\n'
+    printf 'development-team\t7\tsuper-long-editor-window-name\t1\t%%4\t/home/wl/workspace/projects/customer-alpha/releases/2026/sprint-12/archive\n'
     ;;
   *)
     echo "unsupported list-panes format: $format" >&2
@@ -142,8 +143,19 @@ assert_contains() {
   fi
 }
 
-tab_names=("work" "notes" "current" "graveyard")
-tab_panes=("%1" "" "%2" "%99")
+assert_not_contains() {
+  local needle="$1"
+  local message="$2"
+
+  if grep -Fq -- "$needle" "$LOG_FILE"; then
+    printf 'FAIL: %s\nunexpected: %s\nlog:\n' "$message" "$needle" >&2
+    cat "$LOG_FILE" >&2 || true
+    exit 1
+  fi
+}
+
+tab_names=("work" "notes" "current" "graveyard" "project-alpha-super-long-tab-name")
+tab_panes=("%1" "" "%2" "%99" "%4")
 save_tabs tab_names tab_panes
 
 : >"$LOG_FILE"
@@ -206,9 +218,13 @@ assert_contains "display-menu -T 새 탭 'work-copy'에 붙일 pane 선택 -x C 
 assert_contains "1 dev:editor.0 · ~/work · 탭 1 work" "pane picker should show the pane's current tab assignment"
 assert_contains "2 dev:logs.0 · ~/logs · 탭 3 current ← current" "pane picker should show the current pane assignment and marker together"
 assert_contains "3 dev:shell.0 · ~/tmp · 미지정" "pane picker should show unassigned panes explicitly"
+assert_contains "4 " "pane picker should include the long-label pane"
+assert_contains "…" "pane picker should truncate long pane labels with an ellipsis"
+assert_not_contains "development-team:super-long-editor-window-name.1 · ~/…/sprint-12/archive · 탭 5 project-alpha-super-long-tab-name" "pane picker should not render the full long descriptor inline"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %1 \"/dev/pts/1\"'" "create-selected should attach selected pane into the named new tab"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %2 \"/dev/pts/1\"'" "create-selected should offer all panes in picker"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %3 \"/dev/pts/1\"'" "create-selected should offer unassigned panes too"
+assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"work-copy\" %4 \"/dev/pts/1\"'" "create-selected should offer long-label panes too"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-reorder 2 /dev/pts/1
@@ -235,11 +251,11 @@ assert_contains "display-menu -T 탭 관리 -x C -y C" "cleanup should return to
 post_prune_names=()
 post_prune_panes=()
 load_tabs post_prune_names post_prune_panes
-if [ "${#post_prune_names[@]}" -ne 2 ]; then
-  printf 'FAIL: prune should remove empty and dead tabs\n' >&2
+if [ "${#post_prune_names[@]}" -ne 3 ]; then
+  printf 'FAIL: prune should keep connected tabs including long-label assignments\n' >&2
   exit 1
 fi
-if [ "${post_prune_names[0]}" != "work" ] || [ "${post_prune_names[1]}" != "current" ]; then
+if [ "${post_prune_names[0]}" != "work" ] || [ "${post_prune_names[1]}" != "current" ] || [ "${post_prune_names[2]}" != "project-alpha-super-long-tab-name" ]; then
   printf 'FAIL: prune should keep only connected/current tabs\n' >&2
   exit 1
 fi
