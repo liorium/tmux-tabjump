@@ -13,7 +13,7 @@ The plugin provides a **manual tab bar + automatic tab persistence**.
 - `M-1..9`
   - Jump directly to tabs 1 through 9
 - `prefix + m`
-  - Opens the tab management menu
+  - Opens the current-pane actions first
   - Create tab / delete tab / rename tab / attach pane / detach pane / prune dead tabs
 
 The plugin does not rely on its own polling loop.
@@ -42,12 +42,15 @@ From the bottom bar:
 
 From the `prefix + m` menu:
 
+- It opens on the current-pane actions first.
+
 - Create a new tab
   - Create from the current pane
   - Pick a pane first, then create
 - In the tab management menu
   - Attach another pane to an existing tab
   - Create a new tab from another pane
+  - Confirm before delete / dead-empty cleanup
 - Existing tab detail menu
   - Jump
   - Attach pane

@@ -158,6 +158,7 @@ bash "$ROOT_DIR/scripts/pane-menu.sh" show-shortcuts /dev/pts/1
 assert_contains "display-menu -T 단축키 -x C -y C" "shortcuts menu should use the centered anchor position"
 assert_contains "Option+1..9: 해당 탭으로 이동" "shortcuts menu should list the numeric tab jump binding"
 assert_contains 'Option+`: 이전 탭으로 이동' "shortcuts menu should list the previous-tab binding"
+assert_contains "prefix + m: 현재 pane 작업 열기" "shortcuts menu should describe the new default menu entrypoint"
 assert_contains "← 메인 메뉴" "shortcuts menu should provide a way back to the main menu"
 
 : >"$LOG_FILE"
@@ -171,8 +172,10 @@ assert_contains "⊘ 현재 탭에서 해제" "pane actions should still allow d
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-manage-menu /dev/pts/1
 assert_contains "display-menu -T 탭 관리 -x C -y C" "tab management menu should use the centered anchor position"
+assert_contains "다른 pane 붙이기" "tab management should group attach actions separately"
 assert_contains "⇄ 다른 pane을 기존 탭에 붙이기" "tab management should allow attaching another pane to an existing tab"
 assert_contains "＋ 다른 pane으로 새 탭 만들기" "tab management should allow creating a new tab from another pane"
+assert_contains "탭 구조 관리" "tab management should group structural actions separately"
 assert_contains "⇅ 순서 변경" "tab management should prioritize reorder first"
 assert_contains "✎ 이름 변경" "tab management should prioritize rename second"
 assert_contains "✕ 삭제" "tab management should prioritize delete third"
@@ -207,6 +210,18 @@ bash "$ROOT_DIR/scripts/pane-menu.sh" show-reorder 2 /dev/pts/1
 assert_contains "display-menu -T 순서 변경 · notes -x C -y C" "reorder detail should use the centered anchor position"
 assert_contains "↑ 위로 이동" "reorder detail should offer moving a tab upward"
 assert_contains "↓ 아래로 이동" "reorder detail should offer moving a tab downward"
+
+: >"$LOG_FILE"
+bash "$ROOT_DIR/scripts/pane-menu.sh" show-delete-confirm 2 /dev/pts/1 manage
+assert_contains "display-menu -T 삭제 확인 · notes -x C -y C" "delete confirm should show the target tab name"
+assert_contains "정말 삭제할까요?" "delete confirm should require an explicit confirmation step"
+assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh delete 2 \"/dev/pts/1\" manage'" "delete confirm should preserve the manage return path"
+
+: >"$LOG_FILE"
+bash "$ROOT_DIR/scripts/pane-menu.sh" show-prune-confirm /dev/pts/1 manage
+assert_contains "display-menu -T 정리 확인 -x C -y C" "prune confirm should use a dedicated confirmation menu"
+assert_contains "dead/empty 탭을 정리할까요?" "prune confirm should explain the destructive action"
+assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh prune \"/dev/pts/1\" manage'" "prune confirm should keep the manage return path"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" prune /dev/pts/1 manage
