@@ -163,7 +163,7 @@ save_tabs tab_names tab_panes
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show /dev/pts/1
-assert_contains "display-menu -T Tabjump -x C -y C" "main menu should open centered on the client"
+assert_contains "display-menu -T Tabjump -x C -y C -C 0" "main menu should start from the first menu item"
 assert_contains "-c /dev/pts/1" "main menu should target the current client"
 assert_contains "현재 pane 작업" "main menu should split pane actions from tab management"
 assert_contains "탭 관리" "main menu should expose tab management as a separate branch"
@@ -171,7 +171,7 @@ assert_contains "단축키 보기" "main menu should expose a shortcuts entry"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-shortcuts /dev/pts/1
-assert_contains "display-menu -T 단축키 -x C -y C" "shortcuts menu should use the centered anchor position"
+assert_contains "display-menu -T 단축키 -x C -y C -C 0" "shortcuts menu should reopen from the top"
 assert_contains "Option+1..9: 해당 탭으로 이동" "shortcuts menu should list the numeric tab jump binding"
 assert_contains 'Option+`: 이전 탭으로 이동' "shortcuts menu should list the previous-tab binding"
 assert_contains "prefix + m: 현재 pane 작업 열기" "shortcuts menu should describe the new default menu entrypoint"
@@ -179,7 +179,7 @@ assert_contains "← 메인 메뉴" "shortcuts menu should provide a way back to
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-pane-actions /dev/pts/1
-assert_contains "display-menu -T 현재 pane 작업 -x C -y C" "pane actions menu should use the centered anchor position"
+assert_contains "display-menu -T 현재 pane 작업 -x C -y C -C 1" "pane actions menu should start from the first actionable item"
 assert_contains "현재 상태 · #[fg=#3B82F6,bold]3 current#[default]" "pane actions should summarize the current pane's attached tab"
 assert_contains "⇄ 기존 탭에 붙이기" "pane actions should make attaching to an existing tab the top action"
 assert_contains "＋ 새 탭에 붙이기" "pane actions should make creating a new attached tab the second action"
@@ -187,7 +187,7 @@ assert_contains "⊘ 현재 탭에서 해제" "pane actions should still allow d
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-manage-menu /dev/pts/1
-assert_contains "display-menu -T 탭 관리 -x C -y C" "tab management menu should use the centered anchor position"
+assert_contains "display-menu -T 탭 관리 -x C -y C -C 1" "tab management menu should start from the first actionable item"
 assert_contains "다른 pane 붙이기" "tab management should group attach actions separately"
 assert_contains "⇄ 다른 pane을 기존 탭에 붙이기" "tab management should allow attaching another pane to an existing tab"
 assert_contains "＋ 다른 pane으로 새 탭 만들기" "tab management should allow creating a new tab from another pane"
@@ -199,7 +199,7 @@ assert_contains "↺ dead/empty 정리" "tab management should offer explicit de
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-tab-picker attach-current %2 /dev/pts/1
-assert_contains "display-menu -T 기존 탭에 붙이기 -x C -y C" "attach-current flow should open the dedicated tab picker"
+assert_contains "display-menu -T 기존 탭에 붙이기 -x C -y C -C 0" "attach-current flow should reopen from the first tab"
 assert_contains "#[fg=#cdd6f4]1 work · 연결됨#[default]" "attach picker should color connected tabs with the default menu text color"
 assert_contains "#[fg=#f9e2af]2 notes · 비어 있음#[default]" "attach picker should color empty tabs with the empty-tab accent"
 assert_contains "#[fg=#3B82F6,bold]3 current · 현재 pane#[default]" "attach picker should color the current tab with the active accent"
@@ -207,17 +207,17 @@ assert_contains "#[fg=#f38ba8]4 graveyard · 죽은 pane#[default]" "attach pick
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-tab-picker reorder "" /dev/pts/1
-assert_contains "display-menu -T 순서 바꿀 탭 선택 -x C -y C" "reorder flow should start from a dedicated tab picker"
+assert_contains "display-menu -T 순서 바꿀 탭 선택 -x C -y C -C 0" "reorder flow should reopen from the first tab"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-tab-picker attach-existing-tab "" /dev/pts/1
-assert_contains "display-menu -T 붙일 탭 선택 -x C -y C" "attach-existing-tab flow should use a clearer tab picker title"
+assert_contains "display-menu -T 붙일 탭 선택 -x C -y C -C 0" "attach-existing-tab flow should reopen from the first tab"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh show-pane-picker attach 1 \"/dev/pts/1\"'" "attach-existing-tab should route tab 1 to pane picker"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh show-pane-picker attach 2 \"/dev/pts/1\"'" "attach-existing-tab should route tab 2 to pane picker"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-pane-picker create-selected "work-copy" /dev/pts/1
-assert_contains "display-menu -T 새 탭 'work-copy'에 붙일 pane 선택 -x C -y C" "create-selected pane picker should show a clearer target title"
+assert_contains "display-menu -T 새 탭 'work-copy'에 붙일 pane 선택 -x C -y C -C 0" "create-selected pane picker should reopen from the first pane"
 assert_contains "1 dev:editor.0 · ~/work · 탭 1 work" "pane picker should show the pane's current tab assignment"
 assert_contains "2 dev:logs.0 · ~/logs · 탭 3 current ← current" "pane picker should show the current pane assignment and marker together"
 assert_contains "3 dev:shell.0 · ~/tmp · 미지정" "pane picker should show unassigned panes explicitly"
@@ -231,19 +231,19 @@ assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh create-selected \"wor
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-reorder 2 /dev/pts/1
-assert_contains "display-menu -T 순서 변경 · notes -x C -y C" "reorder detail should use the centered anchor position"
+assert_contains "display-menu -T 순서 변경 · notes -x C -y C -C 1" "reorder detail should start from the first move action"
 assert_contains "↑ 위로 이동" "reorder detail should offer moving a tab upward"
 assert_contains "↓ 아래로 이동" "reorder detail should offer moving a tab downward"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-delete-confirm 2 /dev/pts/1 manage
-assert_contains "display-menu -T 삭제 확인 · notes -x C -y C" "delete confirm should show the target tab name"
+assert_contains "display-menu -T 삭제 확인 · notes -x C -y C -C 2" "delete confirm should start from the confirm action"
 assert_contains "정말 삭제할까요?" "delete confirm should require an explicit confirmation step"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh delete 2 \"/dev/pts/1\" manage'" "delete confirm should preserve the manage return path"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/pane-menu.sh" show-prune-confirm /dev/pts/1 manage
-assert_contains "display-menu -T 정리 확인 -x C -y C" "prune confirm should use a dedicated confirmation menu"
+assert_contains "display-menu -T 정리 확인 -x C -y C -C 2" "prune confirm should start from the confirm action"
 assert_contains "dead/empty 탭을 정리할까요?" "prune confirm should explain the destructive action"
 assert_contains "run-shell '$ROOT_DIR/scripts/pane-menu.sh prune \"/dev/pts/1\" manage'" "prune confirm should keep the manage return path"
 

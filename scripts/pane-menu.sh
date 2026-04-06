@@ -32,6 +32,12 @@ add_menu_position() {
   cmd_ref+=(-x "$MENU_X" -y "$MENU_Y")
 }
 
+add_menu_start_choice() {
+  local -n cmd_ref="$1"
+  local choice="$2"
+  cmd_ref+=(-C "$choice")
+}
+
 tab_status_label() {
   local kind="$1"
   case "$kind" in
@@ -205,6 +211,7 @@ show_main_menu() {
     -T "Tabjump"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 0
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -229,6 +236,7 @@ show_shortcuts_menu() {
     -T "단축키"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 0
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -264,6 +272,7 @@ show_pane_actions() {
     -T "현재 pane 작업"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 1
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -297,6 +306,7 @@ show_manage_menu() {
     -T "탭 관리"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 1
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -363,6 +373,7 @@ show_delete_confirm_menu() {
     -T "삭제 확인 · ${tab_names[$tab_index]}"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 2
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -399,6 +410,7 @@ show_prune_confirm_menu() {
     -T "정리 확인"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 2
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -441,6 +453,7 @@ show_reorder_menu() {
     -T "순서 변경 · ${tab_names[$tab_index]}"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 1
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -497,6 +510,7 @@ show_tab_menu() {
     -T "Tab ${tab_number} · ${tab_name}"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 1
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -555,6 +569,7 @@ show_pane_picker() {
     -T "$title"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 0
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
@@ -612,6 +627,7 @@ show_tab_picker() {
     -T "$(tab_picker_title "$mode")"
   )
   add_menu_position cmd
+  add_menu_start_choice cmd 0
   if [ -n "$client_target" ]; then
     cmd+=(-c "$client_target")
   fi
