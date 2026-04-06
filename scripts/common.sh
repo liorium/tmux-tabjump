@@ -385,6 +385,7 @@ truncate_label() {
   local ellipsis="…"
   local ellipsis_width=1
   local text_width char_width budget used result char idx
+  local width_probe_opt="@tabjump-internal-width-probe"
 
   if ! [[ "$max_len" =~ ^[0-9]+$ ]]; then
     printf '%s\n' "$text"
@@ -396,10 +397,24 @@ truncate_label() {
     return
   fi
 
-  text_width="$(printf '%s\n' "$text" | wc -L | tr -d '[:space:]')"
-  if [ -z "$text_width" ]; then
-    text_width=${#text}
-  fi
+  display_width() {
+    local value="$1"
+    local width previous_width
+
+    previous_width="$(tmux show-option -gqv "$width_probe_opt" 2>/dev/null || true)"
+    tmux set-option -gq "$width_probe_opt" "$value" >/dev/null 2>&1 || true
+    width="$(tmux display-message -p "#{w:${width_probe_opt}}" 2>/dev/null || true)"
+    tmux set-option -gq "$width_probe_opt" "$previous_width" >/dev/null 2>&1 || true
+
+    if [[ "$width" =~ ^[0-9]+$ ]]; then
+      printf '%s\n' "$width"
+      return
+    fi
+
+    printf '%s\n' "${#value}"
+  }
+
+  text_width="$(display_width "$text")"
 
   if [ "$text_width" -le "$max_len" ]; then
     printf '%s\n' "$text"
@@ -417,10 +432,7 @@ truncate_label() {
 
   for ((idx = 0; idx < ${#text}; idx++)); do
     char="${text:idx:1}"
-    char_width="$(printf '%s\n' "$char" | wc -L | tr -d '[:space:]')"
-    if [ -z "$char_width" ]; then
-      char_width=${#char}
-    fi
+    char_width="$(display_width "$char")"
 
     if [ $((used + char_width)) -gt "$budget" ]; then
       break

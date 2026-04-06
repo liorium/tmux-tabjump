@@ -83,6 +83,9 @@ display-message)
   '#{pane_id}')
     printf '%%2\n'
     ;;
+  '#{w:@tabjump-internal-width-probe}')
+    read_value "@tabjump-internal-width-probe" | wc -L | tr -d '[:space:]'
+    ;;
   *)
     echo "unsupported display-message format: $format" >&2
     exit 1

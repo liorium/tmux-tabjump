@@ -75,7 +75,15 @@ set-option)
   write_value "$option" "$value"
   ;;
 display-message)
-  printf '120\n'
+  format="${*: -1}"
+  case "$format" in
+  '#{w:@tabjump-internal-width-probe}')
+    read_value "@tabjump-internal-width-probe" | wc -L | tr -d '[:space:]'
+    ;;
+  *)
+    printf '120\n'
+    ;;
+  esac
   ;;
 list-panes)
   printf '%%1\n'

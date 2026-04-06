@@ -21,44 +21,40 @@ touch "$state_file"
 
 read_value() {
   local option="$1"
-  python3 - "$state_file" "$option" <<'PY'
-import pathlib
-import sys
-
-path = pathlib.Path(sys.argv[1])
-option = sys.argv[2]
-value = ""
-if path.exists():
-    for line in path.read_text().splitlines():
-        if not line:
-            continue
-        key, _, raw = line.partition("=")
-        if key == option:
-            value = raw
-print(value)
-PY
+  local line key raw value=""
+  if [ -f "$state_file" ]; then
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      key="${line%%=*}"
+      raw="${line#*=}"
+      if [ "$key" = "$option" ]; then
+        value="$raw"
+      fi
+    done <"$state_file"
+  fi
+  printf '%s\n' "$value"
 }
 
 write_value() {
   local option="$1"
   local value="$2"
-  python3 - "$state_file" "$option" "$value" <<'PY'
-import pathlib
-import sys
+  local tmp_file="${state_file}.tmp"
+  local line key
+  : >"$tmp_file"
 
-path = pathlib.Path(sys.argv[1])
-option = sys.argv[2]
-value = sys.argv[3]
-entries = {}
-if path.exists():
-    for line in path.read_text().splitlines():
-        if not line:
-            continue
-        key, _, raw = line.partition("=")
-        entries[key] = raw
-entries[option] = value
-path.write_text("".join(f"{key}={entries[key]}\n" for key in sorted(entries)))
-PY
+  if [ -f "$state_file" ]; then
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      key="${line%%=*}"
+      if [ "$key" = "$option" ]; then
+        continue
+      fi
+      printf '%s\n' "$line" >>"$tmp_file"
+    done <"$state_file"
+  fi
+
+  printf '%s=%s\n' "$option" "$value" >>"$tmp_file"
+  mv "$tmp_file" "$state_file"
 }
 
 cmd="${1:-}"
@@ -73,6 +69,18 @@ set-option)
   option="${*: -2:1}"
   value="${*: -1}"
   write_value "$option" "$value"
+  ;;
+display-message)
+  format="${*: -1}"
+  case "$format" in
+  '#{w:@tabjump-internal-width-probe}')
+    read_value "@tabjump-internal-width-probe" | wc -L | tr -d '[:space:]'
+    ;;
+  *)
+    echo "unsupported display-message format: $format" >&2
+    exit 1
+    ;;
+  esac
   ;;
 *)
   echo "unsupported tmux command: $cmd" >&2
@@ -161,13 +169,19 @@ assert_tab_array expected_restored_names expected_restored_panes restored_names 
 
 assert_eq "한글A" "$(truncate_label "한글A" 5)" "truncate_label should keep labels that exactly fit the display width"
 assert_eq "한…" "$(truncate_label "한글A" 4)" "truncate_label should use terminal display width for wide unicode labels"
+assert_eq "a#}…" "$(truncate_label "a#}bc" 4)" "truncate_label should escape tmux format delimiters safely"
+assert_eq "a,b…" "$(truncate_label "a,bcd" 4)" "truncate_label should escape tmux commas safely"
 
 mkdir -p "$TMP_DIR/no-python-bin"
+ln -sf "$(command -v env)" "$TMP_DIR/no-python-bin/env"
+ln -sf "$(command -v bash)" "$TMP_DIR/no-python-bin/bash"
+ln -sf "$(command -v touch)" "$TMP_DIR/no-python-bin/touch"
 ln -sf "$(command -v wc)" "$TMP_DIR/no-python-bin/wc"
 ln -sf "$(command -v tr)" "$TMP_DIR/no-python-bin/tr"
+ln -sf "$(command -v mv)" "$TMP_DIR/no-python-bin/mv"
 ln -sf "$(command -v rm)" "$TMP_DIR/no-python-bin/rm"
 saved_path="$PATH"
-PATH="$TMP_DIR/no-python-bin"
+PATH="$TMP_DIR:$TMP_DIR/no-python-bin"
 assert_eq "한…" "$(truncate_label "한글A" 4)" "truncate_label should keep wide-character behavior even without python3"
 PATH="$saved_path"
 
