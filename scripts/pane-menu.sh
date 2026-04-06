@@ -270,6 +270,8 @@ show_manage_menu() {
   cmd+=(--)
 
   cmd+=(
+    "⇄ 기존 탭에 기존 pane 붙이기" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker attach-existing-tab \"\" \"$client_target\"'"
+    "＋ 새 탭에 기존 pane 붙이기" "n" "command-prompt -p 'Tab name' \"run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker create-selected \\\"%%\\\" \\\"$client_target\\\"'\""
     "⇅ 순서 변경" "o" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker reorder \"\" \"$client_target\"'"
     "✎ 이름 변경" "r" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker rename \"\" \"$client_target\"'"
     "✕ 삭제" "d" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker delete \"\" \"$client_target\"'"
@@ -495,6 +497,9 @@ show_tab_picker() {
       attach-current)
         cmd+=("$label" "$key" "run-shell '$CURRENT_DIR/pane-menu.sh attach-pane $((idx + 1)) $pane_id \"$client_target\" pane'")
         ;;
+      attach-existing-tab)
+        cmd+=("$label" "$key" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker attach $((idx + 1)) \"$client_target\"'")
+        ;;
       reorder)
         cmd+=("$label" "$key" "run-shell '$CURRENT_DIR/pane-menu.sh show-reorder $((idx + 1)) \"$client_target\"'")
         ;;
@@ -515,7 +520,7 @@ show_tab_picker() {
   attach-current)
     cmd+=("" "" "" "← 돌아가기" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-actions \"$client_target\"'")
     ;;
-  reorder | rename | delete)
+  attach-existing-tab | reorder | rename | delete)
     cmd+=("" "" "" "← 돌아가기" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'")
     ;;
   *)
