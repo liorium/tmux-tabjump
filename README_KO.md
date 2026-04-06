@@ -13,7 +13,7 @@
 - `M-1..9`
   - 탭 1~9로 바로 이동합니다.
 - `prefix + m`
-  - 현재 pane 작업부터 바로 엽니다.
+  - 메인 메뉴부터 엽니다.
   - 새 탭 생성 / 탭 삭제 / 이름 변경 / pane 연결 / pane 해제 / 죽은 탭 정리
 
 이 플러그인은 자체 polling에 의존하지 않고,
@@ -42,7 +42,7 @@ tmux run-shell ~/.tmux/plugins/tmux-tabjump/tabjump.tmux
 
 `prefix + m` 메뉴에서:
 
-- 처음 열리면 현재 pane 작업이 바로 보입니다.
+- 처음 열리면 메인 메뉴가 먼저 보입니다.
 
 - 새 탭 만들기
   - 현재 pane으로 바로 만들기

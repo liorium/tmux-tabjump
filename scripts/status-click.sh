@@ -14,7 +14,7 @@ pane_menu_script="${TABJUMP_PANE_MENU_SCRIPT:-$CURRENT_DIR/pane-menu.sh}"
 case "$range_value" in
 menu)
   if [ "$event_phase" = "up" ]; then
-    exec "$pane_menu_script" show-pane-actions "$client_target"
+    exec "$pane_menu_script" show "" "$client_target"
   fi
   ;;
 tab:*)

@@ -71,11 +71,11 @@ assert_not_contains() {
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/status-click.sh" menu down /dev/pts/1
-assert_not_contains "pane-menu show-pane-actions /dev/pts/1" "menu should not open on mouse down"
+assert_not_contains "pane-menu show  /dev/pts/1" "menu should not open on mouse down"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/status-click.sh" menu up /dev/pts/1
-assert_contains "pane-menu show-pane-actions /dev/pts/1" "menu should open the current-pane actions first on mouse up"
+assert_contains "pane-menu show  /dev/pts/1" "menu should open the main menu on mouse up"
 
 : >"$LOG_FILE"
 bash "$ROOT_DIR/scripts/status-click.sh" tab:3 down

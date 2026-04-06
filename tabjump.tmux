@@ -34,7 +34,7 @@ tmux bind-key -n MouseUp1Status if-shell -F "#{&&:#{==:#{mouse_status_line},${st
 tmux unbind-key a 2>/dev/null || true
 tmux unbind-key j 2>/dev/null || true
 tmux unbind-key "$pane_menu_key" 2>/dev/null || true
-tmux bind-key "$pane_menu_key" run-shell -b "$CURRENT_DIR/scripts/pane-menu.sh show-pane-actions \"#{client_tty}\""
+tmux bind-key "$pane_menu_key" run-shell -b "$CURRENT_DIR/scripts/pane-menu.sh show \"\" \"#{client_tty}\""
 
 if [ "$direct_jump" = "on" ]; then
   for i in 1 2 3 4 5 6 7 8 9; do

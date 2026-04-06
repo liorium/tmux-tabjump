@@ -174,7 +174,7 @@ bash "$ROOT_DIR/scripts/pane-menu.sh" show-shortcuts /dev/pts/1
 assert_contains "display-menu -T 단축키 -x C -y C -C 0" "shortcuts menu should reopen from the top"
 assert_contains "Option+1..9: 해당 탭으로 이동" "shortcuts menu should list the numeric tab jump binding"
 assert_contains 'Option+`: 이전 탭으로 이동' "shortcuts menu should list the previous-tab binding"
-assert_contains "prefix + m: 현재 pane 작업 열기" "shortcuts menu should describe the new default menu entrypoint"
+assert_contains "prefix + m: 메인 메뉴 열기" "shortcuts menu should describe the main menu entrypoint"
 assert_contains "← 메인 메뉴" "shortcuts menu should provide a way back to the main menu"
 
 : >"$LOG_FILE"
