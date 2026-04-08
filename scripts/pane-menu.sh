@@ -42,16 +42,16 @@ tab_status_label() {
   local kind="$1"
   case "$kind" in
   current)
-    printf '현재 pane\n'
+    t status.current
     ;;
   empty)
-    printf '비어 있음\n'
+    t status.empty
     ;;
   dead)
-    printf '죽은 pane\n'
+    t status.dead
     ;;
   *)
-    printf '연결됨\n'
+    t status.connected
     ;;
   esac
 }
@@ -104,7 +104,7 @@ tab_status_row_label() {
   local current_pane_id="$2"
   local kind
   kind="$(tab_status_kind "$pane_id" "$current_pane_id")"
-  printf '상태 · %s%s#[default]\n' "$(tab_status_style "$kind")" "$(tab_status_label "$kind")"
+  printf '%s · %s%s#[default]\n' "$(t label.status_prefix)" "$(tab_status_style "$kind")" "$(tab_status_label "$kind")"
 }
 
 current_pane_summary_label() {
@@ -115,11 +115,11 @@ current_pane_summary_label() {
 
   local tab_index
   if tab_index="$(tab_index_for_pane "$current_pane_id" 2>/dev/null)"; then
-    printf '현재 상태 · #[fg=#3B82F6,bold]%s %s#[default]\n' "$((tab_index + 1))" "${tab_names[$tab_index]}"
+    printf '%s · #[fg=#3B82F6,bold]%s %s#[default]\n' "$(t label.current_status)" "$((tab_index + 1))" "${tab_names[$tab_index]}"
     return
   fi
 
-  printf '현재 상태 · #[fg=#f9e2af]탭 없음#[default]\n'
+  printf '%s · #[fg=#f9e2af]%s#[default]\n' "$(t label.current_status)" "$(t label.no_tab)"
 }
 
 pane_assignment_label() {
@@ -130,12 +130,12 @@ pane_assignment_label() {
   local idx
   for idx in "${!tab_panes_ref[@]}"; do
     if [ "${tab_panes_ref[$idx]}" = "$pane_id" ]; then
-      printf '탭 %s %s\n' "$((idx + 1))" "${tab_names_ref[$idx]}"
+      tf label.tab_assignment "$((idx + 1))" "${tab_names_ref[$idx]}"
       return
     fi
   done
 
-  printf '미지정\n'
+  t label.unassigned
 }
 
 pane_picker_label() {
@@ -156,22 +156,22 @@ tab_picker_title() {
   local mode="$1"
   case "$mode" in
   attach-current)
-    printf '기존 탭에 붙이기\n'
+    t menu.tab_picker.attach_current
     ;;
   attach-existing-tab)
-    printf '붙일 탭 선택\n'
+    t menu.tab_picker.attach_existing_tab
     ;;
   reorder)
-    printf '순서 바꿀 탭 선택\n'
+    t menu.tab_picker.reorder
     ;;
   rename)
-    printf '이름 바꿀 탭 선택\n'
+    t menu.tab_picker.rename
     ;;
   delete)
-    printf '삭제할 탭 선택\n'
+    t menu.tab_picker.delete
     ;;
   *)
-    printf '탭 선택\n'
+    t menu.tab_picker.default
     ;;
   esac
 }
@@ -188,6 +188,9 @@ resume_menu() {
     ;;
   manage)
     show_manage_menu "$client_target"
+    ;;
+  settings)
+    show_settings_menu "$client_target"
     ;;
   reorder)
     show_reorder_menu "$primary" "$client_target"
@@ -208,7 +211,7 @@ show_main_menu() {
   local cmd=(
     tmux
     display-menu
-    -T "Tabjump"
+    -T "$(t menu.main.title)"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 0
@@ -218,9 +221,9 @@ show_main_menu() {
   cmd+=(--)
 
   cmd+=(
-    "현재 pane 작업" "p" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-actions \"$client_target\"'"
-    "탭 관리" "t" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'"
-    "단축키 보기" "?" "run-shell '$CURRENT_DIR/pane-menu.sh show-shortcuts \"$client_target\"'"
+    "$(t menu.main.current_pane)" "p" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-actions \"$client_target\"'"
+    "$(t menu.main.manage)" "t" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'"
+    "$(t menu.main.settings)" "s" "run-shell '$CURRENT_DIR/pane-menu.sh show-settings-menu \"$client_target\"'"
   )
 
   "${cmd[@]}"
@@ -229,11 +232,25 @@ show_main_menu() {
 show_shortcuts_menu() {
   local client_target
   client_target="$(resolve_client_target "${1:-}" "${2:-}")"
+  local return_menu="${3:-main}"
+  local back_command
+  local back_label
+
+  case "$return_menu" in
+  settings)
+    back_command="run-shell '$CURRENT_DIR/pane-menu.sh show-settings-menu \"$client_target\"'"
+    back_label="$(t nav.back_settings)"
+    ;;
+  *)
+    back_command="run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
+    back_label="$(t nav.back_main)"
+    ;;
+  esac
 
   local cmd=(
     tmux
     display-menu
-    -T "단축키"
+    -T "$(t menu.shortcuts.title)"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 0
@@ -243,14 +260,66 @@ show_shortcuts_menu() {
   cmd+=(--)
 
   cmd+=(
-    "Option+1..9: 해당 탭으로 이동" "" ""
-    'Option+`: 이전 탭으로 이동' "" ""
-    "prefix + m: 메인 메뉴 열기" "" ""
+    "$(t menu.shortcuts.jump_tabs)" "" ""
+    "$(t menu.shortcuts.previous_tab)" "" ""
+    "$(t menu.shortcuts.open_main)" "" ""
     "" "" ""
-    "메뉴 안 Enter: 선택한 탭으로 이동/실행" "" ""
-    "메뉴 안 b: 뒤로가기" "" ""
+    "$(t menu.shortcuts.enter)" "" ""
+    "$(t menu.shortcuts.back)" "" ""
     "" "" ""
-    "← 메인 메뉴" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
+    "$back_label" "b" "$back_command"
+  )
+
+  "${cmd[@]}"
+}
+
+show_settings_menu() {
+  local client_target
+  client_target="$(resolve_client_target "${1:-}" "${2:-}")"
+
+  local cmd=(
+    tmux
+    display-menu
+    -T "$(t menu.settings.title)"
+  )
+  add_menu_position cmd
+  add_menu_start_choice cmd 0
+  if [ -n "$client_target" ]; then
+    cmd+=(-c "$client_target")
+  fi
+  cmd+=(--)
+
+  cmd+=(
+    "$(t menu.settings.shortcuts)" "?" "run-shell '$CURRENT_DIR/pane-menu.sh show-shortcuts \"$client_target\" \"\" settings'"
+    "$(t menu.settings.language)" "l" "run-shell '$CURRENT_DIR/pane-menu.sh show-language-menu \"$client_target\"'"
+    "" "" ""
+    "$(t nav.back_main)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
+  )
+
+  "${cmd[@]}"
+}
+
+show_language_menu() {
+  local client_target
+  client_target="$(resolve_client_target "${1:-}" "${2:-}")"
+
+  local cmd=(
+    tmux
+    display-menu
+    -T "$(t menu.language.title)"
+  )
+  add_menu_position cmd
+  add_menu_start_choice cmd 0
+  if [ -n "$client_target" ]; then
+    cmd+=(-c "$client_target")
+  fi
+  cmd+=(--)
+
+  cmd+=(
+    "$(t menu.language.english)" "e" "run-shell '$CURRENT_DIR/pane-menu.sh set-language en \"$client_target\"'"
+    "$(t menu.language.korean)" "k" "run-shell '$CURRENT_DIR/pane-menu.sh set-language ko \"$client_target\"'"
+    "" "" ""
+    "$(t nav.back_settings)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-settings-menu \"$client_target\"'"
   )
 
   "${cmd[@]}"
@@ -269,7 +338,7 @@ show_pane_actions() {
   local cmd=(
     tmux
     display-menu
-    -T "현재 pane 작업"
+    -T "$(t menu.pane_actions.title)"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 1
@@ -281,18 +350,18 @@ show_pane_actions() {
   cmd+=("$(current_pane_summary_label "$current_pane_id")" "" "")
 
   if [ "${#tab_names[@]}" -gt 0 ]; then
-    cmd+=("⇄ 기존 탭에 붙이기" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker attach-current $current_pane_id \"$client_target\"'")
+    cmd+=("$(t action.attach_existing_tab)" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker attach-current $current_pane_id \"$client_target\"'")
   else
-    cmd+=("-(탭이 없습니다)" "" "")
+    cmd+=("$(t disabled.no_tabs)" "" "")
   fi
 
-  cmd+=("＋ 새 탭에 붙이기" "n" "command-prompt -p 'Tab name' \"run-shell '$CURRENT_DIR/pane-menu.sh create-current \\\"%%\\\" $current_pane_id \\\"$client_target\\\" pane'\"")
+  cmd+=("$(t action.create_new_tab)" "n" "command-prompt -p '$(t prompt.tab_name)' \"run-shell '$CURRENT_DIR/pane-menu.sh create-current \\\"%%\\\" $current_pane_id \\\"$client_target\\\" pane'\"")
 
   if tab_index_for_pane "$current_pane_id" >/dev/null 2>&1; then
-    cmd+=("⊘ 현재 탭에서 해제" "u" "run-shell '$CURRENT_DIR/pane-menu.sh detach-pane $current_pane_id \"$client_target\" pane'")
+    cmd+=("$(t action.detach_current_pane)" "u" "run-shell '$CURRENT_DIR/pane-menu.sh detach-pane $current_pane_id \"$client_target\" pane'")
   fi
 
-  cmd+=("" "" "" "← 메인 메뉴" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'")
+  cmd+=("" "" "" "$(t nav.back_main)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'")
   "${cmd[@]}"
 }
 
@@ -303,7 +372,7 @@ show_manage_menu() {
   local cmd=(
     tmux
     display-menu
-    -T "탭 관리"
+    -T "$(t menu.manage.title)"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 1
@@ -313,17 +382,17 @@ show_manage_menu() {
   cmd+=(--)
 
   cmd+=(
-    "다른 pane 붙이기" "" ""
-    "⇄ 다른 pane을 기존 탭에 붙이기" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker attach-existing-tab \"\" \"$client_target\"'"
-    "＋ 다른 pane으로 새 탭 만들기" "n" "command-prompt -p 'Tab name' \"run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker create-selected \\\"%%\\\" \\\"$client_target\\\"'\""
+    "$(t menu.manage.attach_section)" "" ""
+    "$(t action.attach_other_pane_existing)" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker attach-existing-tab \"\" \"$client_target\"'"
+    "$(t action.attach_other_pane_new_tab)" "n" "command-prompt -p '$(t prompt.tab_name)' \"run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker create-selected \\\"%%\\\" \\\"$client_target\\\"'\""
     "" "" ""
-    "탭 구조 관리" "" ""
-    "⇅ 순서 변경" "o" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker reorder \"\" \"$client_target\"'"
-    "✎ 이름 변경" "r" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker rename \"\" \"$client_target\"'"
-    "✕ 삭제" "d" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker delete \"\" \"$client_target\"'"
-    "↺ dead/empty 정리" "x" "run-shell '$CURRENT_DIR/pane-menu.sh show-prune-confirm \"$client_target\" manage'"
+    "$(t menu.manage.structure_section)" "" ""
+    "$(t action.reorder)" "o" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker reorder \"\" \"$client_target\"'"
+    "$(t action.rename)" "r" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker rename \"\" \"$client_target\"'"
+    "$(t action.delete_tab)" "d" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab-picker delete \"\" \"$client_target\"'"
+    "$(t action.prune_tabs)" "x" "run-shell '$CURRENT_DIR/pane-menu.sh show-prune-confirm \"$client_target\" manage'"
     "" "" ""
-    "← 메인 메뉴" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
+    "$(t nav.back_main)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
   )
 
   "${cmd[@]}"
@@ -335,7 +404,7 @@ show_delete_confirm_menu() {
   local origin_mode="${3:-main}"
 
   if ! [[ "$tab_number" =~ ^[1-9][0-9]*$ ]]; then
-    tmux display-message "invalid tab number"
+    tmux display-message "$(t error.invalid_tab_number)"
     exit 0
   fi
 
@@ -344,7 +413,7 @@ show_delete_confirm_menu() {
   load_tabs tab_names tab_panes
 
   local tab_index=$((tab_number - 1))
-  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "tab ${tab_number} does not exist"; exit 0; }
+  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "$(tf error.tab_not_exists "$tab_number")"; exit 0; }
 
   local current_pane_id
   current_pane_id="$(tmux display-message -p '#{pane_id}')"
@@ -370,7 +439,7 @@ show_delete_confirm_menu() {
   local cmd=(
     tmux
     display-menu
-    -T "삭제 확인 · ${tab_names[$tab_index]}"
+    -T "$(t menu.delete_confirm.title_prefix) · ${tab_names[$tab_index]}"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 2
@@ -381,10 +450,10 @@ show_delete_confirm_menu() {
 
   cmd+=(
     "$(tab_menu_label "$tab_number" "${tab_names[$tab_index]}" "${tab_panes[$tab_index]}" "$current_pane_id")" "" ""
-    "정말 삭제할까요?" "" ""
-    "✕ 삭제" "d" "run-shell '$CURRENT_DIR/pane-menu.sh delete $tab_number \"$client_target\" $delete_return_mode'"
+    "$(t confirm.delete_question)" "" ""
+    "$(t action.confirm_delete)" "d" "run-shell '$CURRENT_DIR/pane-menu.sh delete $tab_number \"$client_target\" $delete_return_mode'"
     "" "" ""
-    "← 돌아가기" "b" "$back_command"
+    "$(t nav.back_generic)" "b" "$back_command"
   )
 
   "${cmd[@]}"
@@ -407,7 +476,7 @@ show_prune_confirm_menu() {
   local cmd=(
     tmux
     display-menu
-    -T "정리 확인"
+    -T "$(t menu.prune_confirm.title)"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 2
@@ -417,11 +486,11 @@ show_prune_confirm_menu() {
   cmd+=(--)
 
   cmd+=(
-    "dead/empty 탭을 정리할까요?" "" ""
-    "비어 있거나 연결이 끊긴 탭이 삭제됩니다." "" ""
-    "↺ 정리" "x" "run-shell '$CURRENT_DIR/pane-menu.sh prune \"$client_target\" $return_mode'"
+    "$(t confirm.prune_question)" "" ""
+    "$(t confirm.prune_detail)" "" ""
+    "$(t action.confirm_prune)" "x" "run-shell '$CURRENT_DIR/pane-menu.sh prune \"$client_target\" $return_mode'"
     "" "" ""
-    "← 돌아가기" "b" "$back_command"
+    "$(t nav.back_generic)" "b" "$back_command"
   )
 
   "${cmd[@]}"
@@ -433,7 +502,7 @@ show_reorder_menu() {
   client_target="$(resolve_client_target "${2:-}" "${3:-}")"
 
   if ! [[ "$tab_number" =~ ^[1-9][0-9]*$ ]]; then
-    tmux display-message "invalid tab number"
+    tmux display-message "$(t error.invalid_tab_number)"
     exit 0
   fi
 
@@ -442,7 +511,7 @@ show_reorder_menu() {
   load_tabs tab_names tab_panes
 
   local tab_index=$((tab_number - 1))
-  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "tab ${tab_number} does not exist"; exit 0; }
+  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "$(tf error.tab_not_exists "$tab_number")"; exit 0; }
 
   local current_pane_id
   current_pane_id="$(tmux display-message -p '#{pane_id}')"
@@ -450,7 +519,7 @@ show_reorder_menu() {
   local cmd=(
     tmux
     display-menu
-    -T "순서 변경 · ${tab_names[$tab_index]}"
+    -T "$(t menu.reorder.title_prefix) · ${tab_names[$tab_index]}"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 1
@@ -462,18 +531,18 @@ show_reorder_menu() {
   cmd+=("$(tab_menu_label "$tab_number" "${tab_names[$tab_index]}" "${tab_panes[$tab_index]}" "$current_pane_id")" "" "")
 
   if [ "$tab_index" -gt 0 ]; then
-    cmd+=("↑ 위로 이동" "k" "run-shell '$CURRENT_DIR/pane-menu.sh move-tab $tab_number up \"$client_target\"'")
+    cmd+=("$(t action.move_up)" "k" "run-shell '$CURRENT_DIR/pane-menu.sh move-tab $tab_number up \"$client_target\"'")
   else
-    cmd+=("-(이미 첫 번째 탭입니다)" "" "")
+    cmd+=("$(t disabled.already_first)" "" "")
   fi
 
   if [ "$tab_index" -lt $((${#tab_names[@]} - 1)) ]; then
-    cmd+=("↓ 아래로 이동" "j" "run-shell '$CURRENT_DIR/pane-menu.sh move-tab $tab_number down \"$client_target\"'")
+    cmd+=("$(t action.move_down)" "j" "run-shell '$CURRENT_DIR/pane-menu.sh move-tab $tab_number down \"$client_target\"'")
   else
-    cmd+=("-(이미 마지막 탭입니다)" "" "")
+    cmd+=("$(t disabled.already_last)" "" "")
   fi
 
-  cmd+=("" "" "" "← 탭 관리" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'")
+  cmd+=("" "" "" "$(t nav.back_manage)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'")
   "${cmd[@]}"
 }
 
@@ -483,7 +552,7 @@ show_tab_menu() {
   client_target="$(resolve_client_target "${2:-}" "${3:-}")"
 
   if ! [[ "$tab_number" =~ ^[1-9][0-9]*$ ]]; then
-    tmux display-message "invalid tab number"
+    tmux display-message "$(t error.invalid_tab_number)"
     exit 0
   fi
 
@@ -493,7 +562,7 @@ show_tab_menu() {
 
   local tab_index=$((tab_number - 1))
   if [ "$tab_index" -ge "${#tab_names[@]}" ]; then
-    tmux display-message "tab ${tab_number} does not exist"
+    tmux display-message "$(tf error.tab_not_exists "$tab_number")"
     exit 0
   fi
 
@@ -507,7 +576,7 @@ show_tab_menu() {
   local cmd=(
     tmux
     display-menu
-    -T "Tab ${tab_number} · ${tab_name}"
+    -T "$(t menu.tab.title_prefix) ${tab_number} · ${tab_name}"
   )
   add_menu_position cmd
   add_menu_start_choice cmd 1
@@ -519,26 +588,26 @@ show_tab_menu() {
   cmd+=("$status_label" "" "")
 
   if [ -n "$pane_id" ] && tab_has_live_pane "$pane_id"; then
-    cmd+=("→ 이동" "g" "run-shell '$CURRENT_DIR/pane-menu.sh focus $tab_number \"$client_target\"'")
+    cmd+=("$(t action.focus_tab)" "g" "run-shell '$CURRENT_DIR/pane-menu.sh focus $tab_number \"$client_target\"'")
   fi
 
   if [ "$current_pane_id" != "$pane_id" ]; then
-    cmd+=("⇄ 현재 pane 붙이기" "c" "run-shell '$CURRENT_DIR/pane-menu.sh attach-pane $tab_number $current_pane_id \"$client_target\"'")
+    cmd+=("$(t action.attach_current_pane)" "c" "run-shell '$CURRENT_DIR/pane-menu.sh attach-pane $tab_number $current_pane_id \"$client_target\"'")
   fi
 
   cmd+=(
-    "⇄ 다른 pane 선택" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker attach $tab_number \"$client_target\"'"
-    "✎ 이름 변경" "r" "command-prompt -I \"$tab_name\" -p 'Rename tab' \"run-shell '$CURRENT_DIR/pane-menu.sh rename $tab_number \\\"%%\\\" \\\"$client_target\\\"'\""
+    "$(t action.select_other_pane)" "a" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-picker attach $tab_number \"$client_target\"'"
+    "$(t action.rename)" "r" "command-prompt -I \"$tab_name\" -p '$(t prompt.rename_tab)' \"run-shell '$CURRENT_DIR/pane-menu.sh rename $tab_number \\\"%%\\\" \\\"$client_target\\\"'\""
   )
 
   if [ -n "$pane_id" ]; then
-    cmd+=("⊘ pane 해제" "u" "run-shell '$CURRENT_DIR/pane-menu.sh detach-tab $tab_number \"$client_target\"'")
+    cmd+=("$(t action.detach_pane)" "u" "run-shell '$CURRENT_DIR/pane-menu.sh detach-tab $tab_number \"$client_target\"'")
   fi
 
   cmd+=(
-    "✕ 탭 삭제" "d" "run-shell '$CURRENT_DIR/pane-menu.sh show-delete-confirm $tab_number \"$client_target\" tab'"
+    "$(t action.delete_tab)" "d" "run-shell '$CURRENT_DIR/pane-menu.sh show-delete-confirm $tab_number \"$client_target\" tab'"
     "" "" ""
-    "← 메인 메뉴" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
+    "$(t nav.back_main)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'"
   )
 
   "${cmd[@]}"
@@ -558,9 +627,9 @@ show_pane_picker() {
 
   local title
   if [ "$mode" = "attach" ]; then
-    title="Tab ${target}에 붙일 pane 선택"
+    title="$(tf menu.pane_picker.attach_title "$target")"
   else
-    title="새 탭 '${target}'에 붙일 pane 선택"
+    title="$(tf menu.pane_picker.create_title "'$target'")"
   fi
 
   local cmd=(
@@ -576,7 +645,7 @@ show_pane_picker() {
   cmd+=(--)
 
   if [ "${#pane_rows[@]}" -eq 0 ]; then
-    cmd+=("(pane이 없습니다)" "" "")
+    cmd+=("$(t disabled.no_panes)" "" "")
   else
     local idx row pane_id key label current_marker
     for idx in "${!pane_rows[@]}"; do
@@ -589,7 +658,7 @@ show_pane_picker() {
 
       current_marker=""
       if [ "$pane_id" = "$(tmux display-message -p '#{pane_id}')" ]; then
-        current_marker=" ← current"
+        current_marker=" ← $(t label.current_marker)"
       fi
 
       label="$(pane_picker_label "$((idx + 1))" "$row" "$pane_id" "$current_marker" tab_names tab_panes)"
@@ -602,9 +671,9 @@ show_pane_picker() {
   fi
 
   if [ "$mode" = "attach" ]; then
-    cmd+=("" "" "" "← 돌아가기" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab $target \"$client_target\"'")
+    cmd+=("" "" "" "$(t nav.back_tab)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-tab $target \"$client_target\"'")
   else
-    cmd+=("" "" "" "← 돌아가기" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'")
+    cmd+=("" "" "" "$(t nav.back_generic)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'")
   fi
   "${cmd[@]}"
 }
@@ -634,7 +703,7 @@ show_tab_picker() {
   cmd+=(--)
 
   if [ "${#tab_names[@]}" -eq 0 ]; then
-    cmd+=("(탭이 없습니다)" "" "")
+    cmd+=("$(t disabled.no_tabs)" "" "")
   else
     local idx key label
     for idx in "${!tab_names[@]}"; do
@@ -655,7 +724,7 @@ show_tab_picker() {
         cmd+=("$label" "$key" "run-shell '$CURRENT_DIR/pane-menu.sh show-reorder $((idx + 1)) \"$client_target\"'")
         ;;
       rename)
-        cmd+=("$label" "$key" "command-prompt -I \"${tab_names[$idx]}\" -p 'Rename tab' \"run-shell '$CURRENT_DIR/pane-menu.sh rename $((idx + 1)) \\\"%%\\\" \\\"$client_target\\\" manage'\"")
+        cmd+=("$label" "$key" "command-prompt -I \"${tab_names[$idx]}\" -p '$(t prompt.rename_tab)' \"run-shell '$CURRENT_DIR/pane-menu.sh rename $((idx + 1)) \\\"%%\\\" \\\"$client_target\\\" manage'\"")
         ;;
       delete)
         cmd+=("$label" "$key" "run-shell '$CURRENT_DIR/pane-menu.sh show-delete-confirm $((idx + 1)) \"$client_target\" manage'")
@@ -669,13 +738,13 @@ show_tab_picker() {
 
   case "$mode" in
   attach-current)
-    cmd+=("" "" "" "← 돌아가기" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-actions \"$client_target\"'")
+    cmd+=("" "" "" "$(t nav.back_generic)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-pane-actions \"$client_target\"'")
     ;;
   attach-existing-tab | reorder | rename | delete)
-    cmd+=("" "" "" "← 돌아가기" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'")
+    cmd+=("" "" "" "$(t nav.back_manage)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show-manage-menu \"$client_target\"'")
     ;;
   *)
-    cmd+=("" "" "" "← 돌아가기" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'")
+    cmd+=("" "" "" "$(t nav.back_generic)" "b" "run-shell '$CURRENT_DIR/pane-menu.sh show \"$client_target\"'")
     ;;
   esac
   "${cmd[@]}"
@@ -687,7 +756,7 @@ create_tab() {
   local client_target="${3:-}"
   local return_mode="${4:-main}"
   tab_name="$(normalize_tab_name "$tab_name")"
-  [ -n "$tab_name" ] || { tmux display-message "tab name is required"; exit 0; }
+  [ -n "$tab_name" ] || { tmux display-message "$(t error.tab_name_required)"; exit 0; }
 
   local tab_names=()
   local tab_panes=()
@@ -709,7 +778,7 @@ attach_pane_to_tab() {
   local return_mode="${4:-tab}"
 
   if ! [[ "$tab_number" =~ ^[1-9][0-9]*$ ]]; then
-    tmux display-message "invalid tab number"
+    tmux display-message "$(t error.invalid_tab_number)"
     exit 0
   fi
 
@@ -719,7 +788,7 @@ attach_pane_to_tab() {
   local tab_index=$((tab_number - 1))
 
   if [ "$tab_index" -ge "${#tab_names[@]}" ]; then
-    tmux display-message "tab ${tab_number} does not exist"
+    tmux display-message "$(tf error.tab_not_exists "$tab_number")"
     exit 0
   fi
 
@@ -738,13 +807,13 @@ rename_tab() {
   local client_target="${3:-}"
   local return_mode="${4:-tab}"
   new_name="$(normalize_tab_name "$new_name")"
-  [ -n "$new_name" ] || { tmux display-message "tab name is required"; exit 0; }
+  [ -n "$new_name" ] || { tmux display-message "$(t error.tab_name_required)"; exit 0; }
 
   local tab_names=()
   local tab_panes=()
   load_tabs tab_names tab_panes
   local tab_index=$((tab_number - 1))
-  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "tab ${tab_number} does not exist"; exit 0; }
+  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "$(tf error.tab_not_exists "$tab_number")"; exit 0; }
 
   tab_names[$tab_index]="$new_name"
   save_tabs tab_names tab_panes
@@ -763,7 +832,7 @@ detach_tab() {
   local tab_panes=()
   load_tabs tab_names tab_panes
   local tab_index=$((tab_number - 1))
-  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "tab ${tab_number} does not exist"; exit 0; }
+  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "$(tf error.tab_not_exists "$tab_number")"; exit 0; }
 
   tab_panes[$tab_index]=""
   save_tabs tab_names tab_panes
@@ -797,7 +866,7 @@ delete_tab() {
   local tab_panes=()
   load_tabs tab_names tab_panes
   local tab_index=$((tab_number - 1))
-  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "tab ${tab_number} does not exist"; exit 0; }
+  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "$(tf error.tab_not_exists "$tab_number")"; exit 0; }
 
   local next_names=()
   local next_panes=()
@@ -851,7 +920,7 @@ move_tab() {
   load_tabs tab_names tab_panes
 
   local tab_index=$((tab_number - 1))
-  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "tab ${tab_number} does not exist"; exit 0; }
+  [ "$tab_index" -lt "${#tab_names[@]}" ] || { tmux display-message "$(tf error.tab_not_exists "$tab_number")"; exit 0; }
 
   local swap_index="$tab_index"
   case "$direction" in
@@ -864,7 +933,7 @@ move_tab() {
     swap_index=$((tab_index + 1))
     ;;
   *)
-    tmux display-message "invalid move direction"
+    tmux display-message "$(t error.invalid_move_direction)"
     exit 0
     ;;
   esac
@@ -892,18 +961,32 @@ focus_tab() {
   fi
 }
 
+set_language_action() {
+  local language="${1:-en}"
+  local client_target="${2:-}"
+  set_tabjump_language "$language"
+  refresh_view
+  show_settings_menu "$client_target"
+}
+
 case "$action" in
 show)
   show_main_menu "$arg1" "$arg2"
   ;;
 show-shortcuts)
-  show_shortcuts_menu "$arg1" "$arg2"
+  show_shortcuts_menu "$arg1" "$arg2" "$arg3"
   ;;
 show-pane-actions)
   show_pane_actions "$arg1" "$arg2"
   ;;
 show-manage-menu)
   show_manage_menu "$arg1" "$arg2"
+  ;;
+show-settings-menu)
+  show_settings_menu "$arg1" "$arg2"
+  ;;
+show-language-menu)
+  show_language_menu "$arg1" "$arg2"
   ;;
 show-tab)
   show_tab_menu "$arg1" "$arg2" "$arg3"
@@ -952,5 +1035,8 @@ move-tab)
   ;;
 focus)
   focus_tab "$arg1" "$arg2"
+  ;;
+set-language)
+  set_language_action "$arg1" "$arg2"
   ;;
 esac

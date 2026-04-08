@@ -125,9 +125,19 @@ assert_tab_array() {
 }
 
 assert_eq "fallback" "$(get_plugin_opt "status-line" "fallback")" "unset plugin option should use default"
+assert_eq "en" "$(tabjump_language)" "language should default to english"
 
 set_plugin_opt "status-line" "3"
 assert_eq "3" "$(get_plugin_opt "status-line" "fallback")" "tabjump option should override default"
+set_plugin_opt "language" "ko"
+assert_eq "ko" "$(tabjump_language)" "language should read persisted korean setting"
+set_plugin_opt "language" "fr"
+assert_eq "en" "$(tabjump_language)" "language should fall back to english for unsupported values"
+assert_eq "Settings" "$(t menu.main.settings)" "english translations should come from translation keys"
+set_plugin_opt "language" "ko"
+assert_eq "설정" "$(t menu.main.settings)" "korean translations should come from translation keys"
+set_tabjump_language en
+assert_eq "en" "$(get_plugin_opt "language" "ko")" "set_tabjump_language should persist english"
 
 expected_default="${XDG_STATE_HOME:-$HOME/.local/state}/tmux-tabjump/tabs.tsv"
 assert_eq "$expected_default" "$(tabs_file)" "tabs_file should use tabjump default path"

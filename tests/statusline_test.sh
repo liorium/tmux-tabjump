@@ -136,4 +136,9 @@ assert_contains "$rendered" "#[bold,fg=#11111b,bg=#3B82F6]1 " "active tab number
 assert_contains "$rendered" "#[bold,fg=#11111b,bg=#f9e2af]2 " "empty tab number should use the restored empty accent color"
 assert_contains "$rendered" "#[fg=#f9e2af,bg=#313244] scratch · empty " "empty tab label should use the restored empty label styling"
 
+set_plugin_opt "language" "ko"
+rendered="$(bash "$ROOT_DIR/scripts/statusline.sh" "%1")"
+assert_contains "$rendered" "#[fg=#cdd6f4,bg=#313244] 메뉴 " "menu badge should translate into korean"
+assert_contains "$rendered" "#[fg=#f9e2af,bg=#313244] scratch · 비어 있음 " "empty tab label should translate into korean"
+
 printf 'PASS: tests/statusline_test.sh\n'

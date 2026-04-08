@@ -30,6 +30,206 @@ set_plugin_opt() {
   set_opt "@tabjump-${suffix}" "$value"
 }
 
+normalize_language() {
+  case "${1:-en}" in
+    ko)
+      printf 'ko\n'
+      ;;
+    *)
+      printf 'en\n'
+      ;;
+  esac
+}
+
+tabjump_language() {
+  normalize_language "$(get_plugin_opt "language" "en")"
+}
+
+set_tabjump_language() {
+  local language
+  language="$(normalize_language "${1:-en}")"
+  set_plugin_opt "language" "$language"
+}
+
+t() {
+  local key="$1"
+  case "$(tabjump_language):$key" in
+    en:menu.main.title) printf 'Tabjump\n' ;;
+    ko:menu.main.title) printf 'Tabjump\n' ;;
+    en:menu.main.current_pane) printf 'Current Pane Actions\n' ;;
+    ko:menu.main.current_pane) printf '현재 pane 작업\n' ;;
+    en:menu.main.manage) printf 'Tab Management\n' ;;
+    ko:menu.main.manage) printf '탭 관리\n' ;;
+    en:menu.main.settings) printf 'Settings\n' ;;
+    ko:menu.main.settings) printf '설정\n' ;;
+    en:menu.settings.title) printf 'Settings\n' ;;
+    ko:menu.settings.title) printf '설정\n' ;;
+    en:menu.settings.shortcuts) printf 'Shortcuts\n' ;;
+    ko:menu.settings.shortcuts) printf '단축키 보기\n' ;;
+    en:menu.settings.language) printf 'Language\n' ;;
+    ko:menu.settings.language) printf '언어\n' ;;
+    en:menu.language.title) printf 'Language\n' ;;
+    ko:menu.language.title) printf '언어\n' ;;
+    en:menu.language.english) printf 'English\n' ;;
+    ko:menu.language.english) printf 'English\n' ;;
+    en:menu.language.korean) printf '한국어\n' ;;
+    ko:menu.language.korean) printf '한국어\n' ;;
+    en:menu.shortcuts.title) printf 'Shortcuts\n' ;;
+    ko:menu.shortcuts.title) printf '단축키\n' ;;
+    en:menu.shortcuts.jump_tabs) printf 'Option+1..9: Jump to tab\n' ;;
+    ko:menu.shortcuts.jump_tabs) printf 'Option+1..9: 해당 탭으로 이동\n' ;;
+    en:menu.shortcuts.previous_tab) printf 'Option+`: Jump to previous tab\n' ;;
+    ko:menu.shortcuts.previous_tab) printf 'Option+`: 이전 탭으로 이동\n' ;;
+    en:menu.shortcuts.open_main) printf 'prefix + m: Open main menu\n' ;;
+    ko:menu.shortcuts.open_main) printf 'prefix + m: 메인 메뉴 열기\n' ;;
+    en:menu.shortcuts.enter) printf 'Enter in menu: choose selected item\n' ;;
+    ko:menu.shortcuts.enter) printf '메뉴 안 Enter: 선택한 항목 실행\n' ;;
+    en:menu.shortcuts.back) printf 'b in menu: go back\n' ;;
+    ko:menu.shortcuts.back) printf '메뉴 안 b: 뒤로가기\n' ;;
+    en:menu.pane_actions.title) printf 'Current Pane Actions\n' ;;
+    ko:menu.pane_actions.title) printf '현재 pane 작업\n' ;;
+    en:menu.manage.title) printf 'Tab Management\n' ;;
+    ko:menu.manage.title) printf '탭 관리\n' ;;
+    en:menu.manage.attach_section) printf 'Attach Another Pane\n' ;;
+    ko:menu.manage.attach_section) printf '다른 pane 붙이기\n' ;;
+    en:menu.manage.structure_section) printf 'Manage Tabs\n' ;;
+    ko:menu.manage.structure_section) printf '탭 구조 관리\n' ;;
+    en:menu.tab.title_prefix) printf 'Tab\n' ;;
+    ko:menu.tab.title_prefix) printf '탭\n' ;;
+    en:menu.delete_confirm.title_prefix) printf 'Delete Confirm\n' ;;
+    ko:menu.delete_confirm.title_prefix) printf '삭제 확인\n' ;;
+    en:menu.prune_confirm.title) printf 'Prune Confirm\n' ;;
+    ko:menu.prune_confirm.title) printf '정리 확인\n' ;;
+    en:menu.reorder.title_prefix) printf 'Reorder\n' ;;
+    ko:menu.reorder.title_prefix) printf '순서 변경\n' ;;
+    en:menu.pane_picker.attach_title) printf '%s\n' 'Select Pane for Tab %s' ;;
+    ko:menu.pane_picker.attach_title) printf '%s\n' 'Tab %s에 붙일 pane 선택' ;;
+    en:menu.pane_picker.create_title) printf '%s\n' 'Select Pane for New Tab %s' ;;
+    ko:menu.pane_picker.create_title) printf '%s\n' '새 탭 %s에 붙일 pane 선택' ;;
+    en:menu.tab_picker.attach_current) printf 'Attach to Existing Tab\n' ;;
+    ko:menu.tab_picker.attach_current) printf '기존 탭에 붙이기\n' ;;
+    en:menu.tab_picker.attach_existing_tab) printf 'Select Tab to Attach Another Pane\n' ;;
+    ko:menu.tab_picker.attach_existing_tab) printf '붙일 탭 선택\n' ;;
+    en:menu.tab_picker.reorder) printf 'Select Tab to Reorder\n' ;;
+    ko:menu.tab_picker.reorder) printf '순서 바꿀 탭 선택\n' ;;
+    en:menu.tab_picker.rename) printf 'Select Tab to Rename\n' ;;
+    ko:menu.tab_picker.rename) printf '이름 바꿀 탭 선택\n' ;;
+    en:menu.tab_picker.delete) printf 'Select Tab to Delete\n' ;;
+    ko:menu.tab_picker.delete) printf '삭제할 탭 선택\n' ;;
+    en:menu.tab_picker.default) printf 'Select Tab\n' ;;
+    ko:menu.tab_picker.default) printf '탭 선택\n' ;;
+    en:label.current_status) printf 'Current Status\n' ;;
+    ko:label.current_status) printf '현재 상태\n' ;;
+    en:label.no_tab) printf 'No Tab\n' ;;
+    ko:label.no_tab) printf '탭 없음\n' ;;
+    en:label.status_prefix) printf 'Status\n' ;;
+    ko:label.status_prefix) printf '상태\n' ;;
+    en:label.tab_assignment) printf '%s\n' 'Tab %s %s' ;;
+    ko:label.tab_assignment) printf '%s\n' '탭 %s %s' ;;
+    en:label.unassigned) printf 'Unassigned\n' ;;
+    ko:label.unassigned) printf '미지정\n' ;;
+    en:label.current_marker) printf 'current\n' ;;
+    ko:label.current_marker) printf '현재\n' ;;
+    en:status.current) printf 'Current Pane\n' ;;
+    ko:status.current) printf '현재 pane\n' ;;
+    en:status.empty) printf 'Empty\n' ;;
+    ko:status.empty) printf '비어 있음\n' ;;
+    en:status.dead) printf 'Dead\n' ;;
+    ko:status.dead) printf '연결 끊김\n' ;;
+    en:status.connected) printf 'Connected\n' ;;
+    ko:status.connected) printf '연결됨\n' ;;
+    en:status.menu_badge) printf 'menu\n' ;;
+    ko:status.menu_badge) printf '메뉴\n' ;;
+    en:status.no_tabs) printf 'no tabs\n' ;;
+    ko:status.no_tabs) printf '탭 없음\n' ;;
+    en:status.empty_short) printf 'empty\n' ;;
+    ko:status.empty_short) printf '비어 있음\n' ;;
+    en:status.dead_short) printf 'dead\n' ;;
+    ko:status.dead_short) printf '끊김\n' ;;
+    en:action.attach_existing_tab) printf '⇄ Attach to Existing Tab\n' ;;
+    ko:action.attach_existing_tab) printf '⇄ 기존 탭에 붙이기\n' ;;
+    en:action.create_new_tab) printf '＋ Create New Tab\n' ;;
+    ko:action.create_new_tab) printf '＋ 새 탭에 붙이기\n' ;;
+    en:action.detach_current_pane) printf '⊘ Detach Current Pane\n' ;;
+    ko:action.detach_current_pane) printf '⊘ 현재 탭에서 해제\n' ;;
+    en:action.attach_other_pane_existing) printf '⇄ Attach Another Pane to Existing Tab\n' ;;
+    ko:action.attach_other_pane_existing) printf '⇄ 다른 pane을 기존 탭에 붙이기\n' ;;
+    en:action.attach_other_pane_new_tab) printf '＋ Create New Tab from Another Pane\n' ;;
+    ko:action.attach_other_pane_new_tab) printf '＋ 다른 pane으로 새 탭 만들기\n' ;;
+    en:action.reorder) printf '⇅ Reorder Tabs\n' ;;
+    ko:action.reorder) printf '⇅ 순서 변경\n' ;;
+    en:action.rename) printf '✎ Rename Tab\n' ;;
+    ko:action.rename) printf '✎ 이름 변경\n' ;;
+    en:action.delete_tab) printf '✕ Delete Tab\n' ;;
+    ko:action.delete_tab) printf '✕ 삭제\n' ;;
+    en:action.prune_tabs) printf '↺ Prune Dead/Empty Tabs\n' ;;
+    ko:action.prune_tabs) printf '↺ dead/empty 정리\n' ;;
+    en:action.focus_tab) printf '→ Focus\n' ;;
+    ko:action.focus_tab) printf '→ 이동\n' ;;
+    en:action.attach_current_pane) printf '⇄ Attach Current Pane\n' ;;
+    ko:action.attach_current_pane) printf '⇄ 현재 pane 붙이기\n' ;;
+    en:action.select_other_pane) printf '⇄ Select Another Pane\n' ;;
+    ko:action.select_other_pane) printf '⇄ 다른 pane 선택\n' ;;
+    en:action.detach_pane) printf '⊘ Detach Pane\n' ;;
+    ko:action.detach_pane) printf '⊘ pane 해제\n' ;;
+    en:action.move_up) printf '↑ Move Up\n' ;;
+    ko:action.move_up) printf '↑ 위로 이동\n' ;;
+    en:action.move_down) printf '↓ Move Down\n' ;;
+    ko:action.move_down) printf '↓ 아래로 이동\n' ;;
+    en:action.confirm_delete) printf '✕ Delete\n' ;;
+    ko:action.confirm_delete) printf '✕ 삭제\n' ;;
+    en:action.confirm_prune) printf '↺ Prune\n' ;;
+    ko:action.confirm_prune) printf '↺ 정리\n' ;;
+    en:disabled.no_tabs) printf '-(No tabs)\n' ;;
+    ko:disabled.no_tabs) printf '-(탭이 없습니다)\n' ;;
+    en:disabled.no_panes) printf '(No panes)\n' ;;
+    ko:disabled.no_panes) printf '(pane이 없습니다)\n' ;;
+    en:disabled.already_first) printf '-(Already the first tab)\n' ;;
+    ko:disabled.already_first) printf '-(이미 첫 번째 탭입니다)\n' ;;
+    en:disabled.already_last) printf '-(Already the last tab)\n' ;;
+    ko:disabled.already_last) printf '-(이미 마지막 탭입니다)\n' ;;
+    en:nav.back_main) printf '← Back to Main Menu\n' ;;
+    ko:nav.back_main) printf '← 메인 메뉴\n' ;;
+    en:nav.back_settings) printf '← Back to Settings\n' ;;
+    ko:nav.back_settings) printf '← 설정으로 돌아가기\n' ;;
+    en:nav.back_manage) printf '← Back to Tab Management\n' ;;
+    ko:nav.back_manage) printf '← 탭 관리\n' ;;
+    en:nav.back_tab) printf '← Back to Tab\n' ;;
+    ko:nav.back_tab) printf '← 돌아가기\n' ;;
+    en:nav.back_generic) printf '← Back\n' ;;
+    ko:nav.back_generic) printf '← 돌아가기\n' ;;
+    en:prompt.tab_name) printf 'Tab name\n' ;;
+    ko:prompt.tab_name) printf '탭 이름\n' ;;
+    en:prompt.rename_tab) printf 'Rename tab\n' ;;
+    ko:prompt.rename_tab) printf '탭 이름 변경\n' ;;
+    en:confirm.delete_question) printf 'Delete this tab?\n' ;;
+    ko:confirm.delete_question) printf '정말 삭제할까요?\n' ;;
+    en:confirm.prune_question) printf 'Prune dead/empty tabs?\n' ;;
+    ko:confirm.prune_question) printf 'dead/empty 탭을 정리할까요?\n' ;;
+    en:confirm.prune_detail) printf 'Empty tabs and tabs with missing panes will be removed.\n' ;;
+    ko:confirm.prune_detail) printf '비어 있거나 연결이 끊긴 탭이 삭제됩니다.\n' ;;
+    en:error.invalid_tab_number) printf 'invalid tab number\n' ;;
+    ko:error.invalid_tab_number) printf '잘못된 탭 번호입니다\n' ;;
+    en:error.tab_not_exists) printf '%s\n' 'tab %s does not exist' ;;
+    ko:error.tab_not_exists) printf '%s\n' '탭 %s 가 없습니다' ;;
+    en:error.tab_name_required) printf 'tab name is required\n' ;;
+    ko:error.tab_name_required) printf '탭 이름이 필요합니다\n' ;;
+    en:error.invalid_move_direction) printf 'invalid move direction\n' ;;
+    ko:error.invalid_move_direction) printf '잘못된 이동 방향입니다\n' ;;
+    *)
+      printf '%s\n' "$key"
+      ;;
+  esac
+}
+
+tf() {
+  local key="$1"
+  shift || true
+  local format
+  format="$(t "$key")"
+  printf "$format" "$@"
+}
+
 tabs_file() {
   local custom
   custom="$(tmux show-option -gqv "@tabjump-tabs-file" 2>/dev/null || true)"

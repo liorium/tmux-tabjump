@@ -26,7 +26,7 @@ render_badge() {
 }
 
 render_menu_badge() {
-  printf '#[range=user|menu]#[fg=#6c7086,bg=#1e1e2e]#[bold,fg=#11111b,bg=#6c7086]m #[fg=#cdd6f4,bg=#313244] menu #[default]#[norange]'
+  printf '#[range=user|menu]#[fg=#6c7086,bg=#1e1e2e]#[bold,fg=#11111b,bg=#6c7086]m #[fg=#cdd6f4,bg=#313244] %s #[default]#[norange]' "$(t status.menu_badge)"
 }
 
 render_tab_badge() {
@@ -65,7 +65,7 @@ tab_panes=()
 load_tabs tab_names tab_panes
 
 if [ "${#tab_names[@]}" -eq 0 ]; then
-  append_segment tabs_output "$(render_badge "empty" "no tabs" "#11111b" "#45475a")"
+  append_segment tabs_output "$(render_badge "empty" "$(t status.no_tabs)" "#11111b" "#45475a")"
   printf '#[align=left]%s#[align=right]%s' "$tabs_output" "$badges_output"
   exit 0
 fi
@@ -97,11 +97,11 @@ for idx in "${!tab_names[@]}"; do
   elif [ -z "$pane_id" ]; then
     number_bg="#f9e2af"
     label_fg="#f9e2af"
-    tab_name="${tab_name} · empty"
+    tab_name="${tab_name} · $(t status.empty_short)"
   elif ! tab_has_live_pane "$pane_id"; then
     number_bg="#f38ba8"
     label_fg="#f38ba8"
-    tab_name="${tab_name} · dead"
+    tab_name="${tab_name} · $(t status.dead_short)"
   fi
 
   tab_name="$(truncate_label "$tab_name" "$per_tab_budget")"

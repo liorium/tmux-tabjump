@@ -14,7 +14,7 @@
   - 탭 1~9로 바로 이동합니다.
 - `prefix + m`
   - 메인 메뉴부터 엽니다.
-  - 새 탭 생성 / 탭 삭제 / 이름 변경 / pane 연결 / pane 해제 / 죽은 탭 정리
+  - Current Pane Actions / Tab Management / Settings 로 진입합니다.
 
 이 플러그인은 자체 polling에 의존하지 않고,
 탭 변경/클릭 및 tmux 구조 변경 hook으로 상태줄을 새로고칩니다.
@@ -43,6 +43,15 @@ tmux run-shell ~/.tmux/plugins/tmux-tabjump/tabjump.tmux
 `prefix + m` 메뉴에서:
 
 - 처음 열리면 메인 메뉴가 먼저 보입니다.
+- 메인 메뉴
+  - Current Pane Actions
+  - Tab Management
+  - Settings
+- Settings 안에서
+  - Shortcuts
+  - Language
+  - English / 한국어
+- 언어 설정은 tmux 서버에 유지되며 기본값은 영어입니다.
 
 - 새 탭 만들기
   - 현재 pane으로 바로 만들기

@@ -14,7 +14,7 @@ The plugin provides a **manual tab bar + automatic tab persistence**.
   - Jump directly to tabs 1 through 9
 - `prefix + m`
   - Opens the main menu first
-  - Create tab / delete tab / rename tab / attach pane / detach pane / prune dead tabs
+  - Current Pane Actions / Tab Management / Settings
 
 The plugin does not rely on its own polling loop.
 Instead, it refreshes the status line on tab changes, clicks, and tmux structure-change hooks.
@@ -43,6 +43,15 @@ From the bottom bar:
 From the `prefix + m` menu:
 
 - It opens on the main menu first.
+- Main menu
+  - Current Pane Actions
+  - Tab Management
+  - Settings
+- From Settings
+  - Shortcuts
+  - Language
+  - English / 한국어
+- Language is persisted in the tmux server and defaults to English.
 
 - Create a new tab
   - Create from the current pane
