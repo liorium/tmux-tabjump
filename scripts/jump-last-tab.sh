@@ -9,12 +9,12 @@ current_tab="$(active_tab_number 2>/dev/null || true)"
 last_tab="$(tmux show-option -gqv "@tabjump-last-tab" 2>/dev/null || true)"
 
 if ! [[ "$last_tab" =~ ^[1-9][0-9]*$ ]]; then
-  tmux display-message "no previous tab"
+  tmux display-message "$(t error.no_previous_tab)"
   exit 0
 fi
 
 if [ -n "$current_tab" ] && [ "$last_tab" = "$current_tab" ]; then
-  tmux display-message "already on the previous tab"
+  tmux display-message "$(t error.already_previous_tab)"
   exit 0
 fi
 

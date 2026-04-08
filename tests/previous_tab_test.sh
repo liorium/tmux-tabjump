@@ -103,9 +103,11 @@ display-message)
     *) printf 'dev:1\n' ;;
     esac
     ;;
+  '#{w:@tabjump-internal-width-probe}')
+    read_value "@tabjump-internal-width-probe" | wc -L | tr -d '[:space:]'
+    ;;
   *)
-    echo "unsupported display-message format: $format" >&2
-    exit 1
+    printf '%s %s\n' "$cmd" "$*" >>"$log_file"
     ;;
   esac
   ;;
@@ -190,5 +192,30 @@ assert_eq "%1" "$(tmux show-option -gqv current_pane)" "jump-last-tab should mov
 sync_active_tab_history
 assert_eq "1" "$(tmux show-option -gqv @tabjump-current-tab)" "sync after jumping back should update current tab"
 assert_eq "2" "$(tmux show-option -gqv @tabjump-last-tab)" "sync after jumping back should enable toggling"
+
+set_plugin_opt "language" "ko"
+set_opt current_pane "%1"
+set_plugin_opt "last-tab" ""
+: >"$LOG_FILE"
+bash "$ROOT_DIR/scripts/jump-last-tab.sh"
+assert_contains "display-message 이전 탭이 없습니다" "jump-last-tab should translate the no-previous-tab message"
+
+: >"$LOG_FILE"
+bash "$ROOT_DIR/scripts/jump-visible-pane.sh" 9
+assert_contains "display-message 탭 9 를 사용할 수 없습니다" "jump-visible-pane should translate unavailable-tab errors"
+
+tab_names=("alpha" "beta")
+tab_panes=("" "%2")
+save_tabs tab_names tab_panes
+: >"$LOG_FILE"
+bash "$ROOT_DIR/scripts/jump-visible-pane.sh" 1
+assert_contains "display-message 탭 alpha 가 비어 있습니다" "jump-visible-pane should translate empty-tab errors"
+
+tab_names=("alpha" "beta")
+tab_panes=("%9" "%2")
+save_tabs tab_names tab_panes
+: >"$LOG_FILE"
+bash "$ROOT_DIR/scripts/jump-visible-pane.sh" 1
+assert_contains "display-message 탭 alpha 가 끊어진 pane을 가리킵니다" "jump-visible-pane should translate dead-pane errors"
 
 printf 'PASS: tests/previous_tab_test.sh\n'
